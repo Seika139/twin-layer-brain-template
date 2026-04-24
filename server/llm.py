@@ -45,7 +45,7 @@ _CACHE_FILE = INDEX_DIR / "llm_provider_cache.json"
 
 
 def _get_provider_order() -> list[str]:
-    custom = os.environ.get("SECOND_BRAIN_LLM_PRIORITY")
+    custom = os.environ.get("BRAIN_LLM_PRIORITY")
     if custom:
         return [p.strip().lower() for p in custom.split(",") if p.strip()]
     return LLM_PROVIDERS

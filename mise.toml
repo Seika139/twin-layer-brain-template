@@ -1,13 +1,14 @@
-# mise configuration for brain-accelerator.
+# mise configuration for twin-layer-brain-template.
 # Run `mise tasks` to list tasks, `mise run <name>` to execute.
+# Tool pins and compiler/server tasks are integrated in Phase 1.c.2.
 
 [tools]
 # No tool pins — the repo's tasks shell out to git/rumdl/markdownlint-cli2
 # which are installed at the user level.
 
 [tasks.scaffold-brain]
-description = "Empty inherited template content so a freshly cloned brain starts blank (refuses to run inside brain-accelerator itself)"
-usage = "cd ~/programs/brain-<topic> && mise run scaffold-brain"
+description = "Empty inherited template content so a freshly cloned brain starts blank (refuses to run inside twin-layer-brain-template itself)"
+usage = "cd ~/programs/brains/twin-layer-brain-<topic> && mise run scaffold-brain"
 file = "mise/tasks/scaffold-brain.sh"
 
 [tasks.clone-repo]

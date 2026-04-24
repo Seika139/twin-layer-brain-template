@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # Scaffold a fresh brain in the current directory by emptying inherited
 # template content and restoring index.md / log.md to their frontmatter
-# skeletons. Run this right after copying the brain-accelerator template
+# skeletons. Run this right after copying the twin-layer-brain-template
 # into a new directory (or cloning from the template on GitHub).
 #
-# Usage: cd ~/programs/brain-<topic> && mise run scaffold-brain
+# Usage: cd ~/programs/brains/twin-layer-brain-<topic> && mise run scaffold-brain
 #
 # What it does:
 #   - Removes all files under raw/{notes,articles,assets}/ and
 #     wiki/{sources,entities,concepts,topics,analyses}/ except .gitkeep markers.
 #   - Rewrites wiki/index.md and wiki/log.md to empty frontmatter-only form.
-#   - Leaves CLAUDE.md, AGENTS.md, README.md, GUIDE.md, and the skill
-#     packages untouched (you edit the Scope line in README.md and
-#     CLAUDE.md by hand).
+#   - Leaves CLAUDE.md, AGENTS.md, README.md, GUIDE.md, the skill packages,
+#     and compiler/server infra untouched (you edit the Scope line in
+#     README.md and CLAUDE.md by hand).
 #
-# Safety: refuses to run in a directory literally named brain-accelerator
+# Safety: refuses to run in a directory literally named twin-layer-brain-template
 # (the template itself) unless FORCE=1 is set.
 
 set -euo pipefail
@@ -22,7 +22,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BASENAME="$(basename "$ROOT_DIR")"
 
-if [[ "$BASENAME" == "brain-accelerator" && "${FORCE:-}" != "1" ]]; then
+if [[ "$BASENAME" == "twin-layer-brain-template" && "${FORCE:-}" != "1" ]]; then
     echo "[refuse] Running in the template repo ($BASENAME)." >&2
     echo "         scaffold-brain is for freshly cloned derivative brains." >&2
     echo "         If you really mean it, re-run with FORCE=1." >&2
@@ -97,7 +97,7 @@ Entry types: \`ingest\`, \`query\`, \`lint\`, \`refactor\`.
 
 ## [${TODAY}] refactor | initialise brain from template
 
-- Scaffolded from the brain-accelerator template.
+- Scaffolded from the twin-layer-brain template.
 - Next: rewrite the Scope line in README.md and CLAUDE.md, then ingest the first source.
 EOF
 echo "  - reset wiki/log.md"

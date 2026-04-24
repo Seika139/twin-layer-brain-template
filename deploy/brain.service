@@ -1,0 +1,23 @@
+[Unit]
+Description=twin-layer-brain knowledge server
+After=network.target
+
+[Service]
+Type=simple
+# setup.sh が %USER% と /opt/brain を実際の値に書き換えて配置する
+User=%USER%
+Group=%USER%
+WorkingDirectory=/opt/brain
+EnvironmentFile=/opt/brain/.env
+ExecStart=/opt/brain/.venv/bin/python -m server.run
+Restart=on-failure
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/brain
+
+[Install]
+WantedBy=multi-user.target

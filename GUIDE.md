@@ -1,4 +1,4 @@
-# GUIDE — brain-accelerator 利用ガイド
+# GUIDE — twin-layer-brain 利用ガイド
 
 個人用 Second Brain の運用マニュアル。日常的な使い方を**人間の目線**でまとめたもの。LLM 向けのスキーマは `CLAUDE.md` / `AGENTS.md` を参照。
 
@@ -20,7 +20,7 @@
 
 ## このリポジトリは何か
 
-`brain-accelerator` は**個人用の Second Brain**（かつ新しいブレインを立ち上げるためのテンプレート）。記事・書籍・リポジトリ・自分のメモを LLM に読ませ、相互リンクされた Markdown Wiki として育てていく仕組み。
+`twin-layer-brain-template` は**個人用の Second Brain**を立ち上げるためのテンプレート。記事・書籍・リポジトリ・自分のメモを LLM に読ませ、相互リンクされた Markdown Wiki として育てていく仕組みに、**SQLite による高速検索層 (Layer 1)** を加えた二層構成。`brain-accelerator_1` の wiki / skill 構造に `second-brain` の FTS5 + MCP + Chrome 拡張連携を統合している。
 
 Karpathy の [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) を下敷きにしている。RAG との違いは**知識が蓄積する**こと — 同じ質問を繰り返すほどに、LLM は過去の統合結果を読んで答えるため、Wiki が賢くなる。
 
@@ -75,11 +75,17 @@ Karpathy の [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf55591489
 ### セットアップ
 
 ```bash
-git clone <this-repo-url> ~/programs/brain-accelerator
-cd ~/programs/brain-accelerator
+# このテンプレートから派生ブレインを立てる例
+gh repo create Seika139/twin-layer-brain-<topic> --private \
+    --template=Seika139/twin-layer-brain-template
+mkdir -p ~/programs/brains
+git -C ~/programs/brains clone git@github.com:Seika139/twin-layer-brain-<topic>.git
+cd ~/programs/brains/twin-layer-brain-<topic>
 
-# mise タスクを使える状態に
+# ツール・依存をインストール
 mise install
+uv sync
+pnpm install
 
 # VS Code で開く
 code .

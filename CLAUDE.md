@@ -1,12 +1,21 @@
 # CLAUDE.md
 
-Operating schema for the LLM agent maintaining this personal Second Brain. Based on karpathy's "LLM Wiki" pattern (<https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>).
+Operating schema for the LLM agent maintaining this **twin-layer-brain**. Based on karpathy's "LLM Wiki" pattern (<https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>) with an added SQLite search layer.
 
 ## Scope
 
 This brain covers: **<このブレインが扱う範囲を 1 行で書き換える>**
 
 One brain = one topic. For a different topic — another work project, a side domain, a separate machine — spin up a new repo from this template. Keeping brains narrow keeps the `[[wiki-link]]` graph dense and prevents sensitive material from leaking across domains. See `README.md` → **Spin up a new brain** for the template workflow.
+
+## Twin-layer architecture
+
+This brain has two cooperating search layers over the same Markdown source of truth:
+
+- **Layer 1 (SQLite)** — `compiler/` indexes all Markdown into SQLite (FTS5 for keywords, `sqlite-vec` for embeddings). Exposed via `kc` CLI, REST API (`server/`), MCP server, and Chrome extension. Derived and regenerable — `kc index` rebuilds from scratch.
+- **Layer 2 (LLM wiki)** — `wiki/` is an LLM-maintained graph of interlinked Markdown pages. Grows by compound: each ingest updates 10–15 pages, not a single page.
+
+**Single-direction data flow**: writes happen on Markdown (`raw/` by humans, `wiki/` by the LLM); Layer 1 auto-re-indexes after writes. The LLM never writes to SQL directly. Layer 1 is consulted as a retrieval accelerator during `query` / `dive`, but synthesis is Layer 2's job.
 
 ## Layout and ownership
 
@@ -268,6 +277,8 @@ Entry types: `ingest`, `query`, `sublime`, `dive`, `lint`, `refactor` (schema ch
 - VS Code is the daily editor. Recommended extensions: `.vscode/extensions.json` (Foam, Mermaid preview, markdownlint, rumdl, Code Spell Checker).
 - Lint: both `markdownlint-cli2` and `rumdl`. Configs kept in sync (`.markdownlint-cli2.jsonc`, `.rumdl.toml`).
 - Repo management: `mise` (see `mise.toml`). `mise run clone-repo` / `mise run update-repos` for ingestable repo clones.
+- Layer 1 (SQLite): `compiler/` provides the `kc` CLI (`kc new` / `kc index` / `kc search` / `kc suggest-related` / `kc check-keys`). `server/` provides FastAPI + MCP. `mise run serve` starts the HTTP server; `mise run serve:install` registers it as a launchd service on macOS.
+- API keys: store provider keys in `.env` (template: `.env.example`). `mise run check-keys` diagnoses which providers are usable. FTS keyword search works without any key; semantic search needs an embedding provider.
 
 ## Guardrails (recap)
 

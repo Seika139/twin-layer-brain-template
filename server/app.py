@@ -15,7 +15,7 @@ from server.routes.sync import router as sync_router
 
 # --- FastAPI (REST API) ---
 
-fastapi_app = FastAPI(title="second-brain API", version="0.1.0")
+fastapi_app = FastAPI(title="twin-layer-brain API", version="0.1.0")
 fastapi_app.include_router(notes_router)
 fastapi_app.include_router(index_router)
 fastapi_app.include_router(sync_router)

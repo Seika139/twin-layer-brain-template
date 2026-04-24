@@ -1,8 +1,8 @@
 # AGENTS.md
 
-Operating schema for Codex (OpenAI) agents maintaining this personal Second Brain. This file is the Codex-facing companion to `CLAUDE.md`; keep them aligned. If they diverge, `CLAUDE.md` is the source of truth and this file should be updated to match.
+Operating schema for Codex (OpenAI) agents maintaining this **twin-layer-brain**. This file is the Codex-facing companion to `CLAUDE.md`; keep them aligned. If they diverge, `CLAUDE.md` is the source of truth and this file should be updated to match.
 
-Based on karpathy's "LLM Wiki" pattern: <https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>.
+Based on karpathy's "LLM Wiki" pattern: <https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>. Extended with a Layer 1 SQLite search (FTS5 + embeddings) exposed via `compiler/` (`kc` CLI) and `server/` (FastAPI + MCP). Writes always land on Markdown; Layer 1 re-indexes automatically.
 
 ## Scope
 

@@ -11,7 +11,7 @@ _bearer = HTTPBearer()
 
 
 def _get_api_token() -> str | None:
-    return os.environ.get("SECOND_BRAIN_API_TOKEN")
+    return os.environ.get("BRAIN_API_TOKEN")
 
 
 async def require_token(

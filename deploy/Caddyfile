@@ -1,6 +1,6 @@
-# second-brain reverse proxy
+# twin-layer-brain reverse proxy
 # このファイルを /etc/caddy/Caddyfile に追記するか、
-# /etc/caddy/conf.d/second-brain.caddy として配置する
+# /etc/caddy/conf.d/brain.caddy として配置する
 
 brain.example.com {
 	reverse_proxy localhost:15200

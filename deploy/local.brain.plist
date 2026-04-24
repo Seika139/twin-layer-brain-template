@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  launchd plist template for twin-layer-brain instances on macOS.
+
+  Placeholders (replace before installing to ~/Library/LaunchAgents/):
+    - %BRAIN_LABEL% : unique launchd label, e.g. local.twin-layer-brain-personal
+    - %BRAIN_ROOT% : absolute repo path, e.g. /Users/<you>/programs/brains/twin-layer-brain-personal
+
+  The `mise run serve:install` task does this substitution automatically.
+-->
+<dict>
+  <key>Label</key>
+  <string>%BRAIN_LABEL%</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>%BRAIN_ROOT%/.venv/bin/python</string>
+    <string>-m</string>
+    <string>server.run</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>%BRAIN_ROOT%</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>%BRAIN_ROOT%/index/server.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>%BRAIN_ROOT%/index/server.log</string>
+</dict>
+</plist>

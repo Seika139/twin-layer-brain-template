@@ -1,7 +1,7 @@
 [project]
-name = "second-brain"
+name = "twin-layer-brain"
 version = "0.1.0"
-description = "Personal knowledge repository with AI-friendly API"
+description = "Twin-layer brain template: SQLite fast search (Layer 1) + LLM self-expanding wiki (Layer 2)"
 requires-python = ">=3.12"
 dependencies = [
     "python-frontmatter>=1.0",
