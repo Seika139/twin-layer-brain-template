@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "devDependencies": {
+    "textlint": "^15.0.0",
+    "textlint-rule-preset-ja-technical-writing": "^10.0.0",
+    "textlint-rule-preset-jtf-style": "^2.0.0"
+  }
+}
