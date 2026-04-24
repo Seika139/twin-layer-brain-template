@@ -1,0 +1,8 @@
+{
+  "newLinkFormat": "relative",
+  "useMarkdownLinks": false,
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "raw/assets",
+  "showLineNumber": true,
+  "promptDelete": false
+}

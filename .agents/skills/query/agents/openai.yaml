@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Query"
+  short_description: "wiki/ を横断回答し、再利用価値の高い回答は canonical へ昇格または analyses にスナップショット化する"
+  default_prompt: "Use this skill to answer from wiki/ pages starting at wiki/index.md, pick a response format that fits the question (prose / comparison table / Mermaid / decision tree / Marp / new page), prefer updating existing wiki/concepts or wiki/entities pages when that is the better home, offer to persist reusable answers as either wiki/analyses/<slug>.md (snapshot, gitignored by default) or promotion into wiki/ (canonical), add tags and reciprocal [[wiki-links]], and append a query entry to wiki/log.md."

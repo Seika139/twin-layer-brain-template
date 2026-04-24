@@ -1,0 +1,44 @@
+# rumdl (markdown linter) configuration.
+#
+# This project intentionally uses BOTH rumdl and markdownlint-cli2:
+# - rumdl: CLI linting and LSP server, invoked via `rumdl check` or the
+#   rumdl VS Code extension (rvben.rumdl).
+# - markdownlint-cli2: read by the markdownlint VS Code extension
+#   (davidanson.vscode-markdownlint) for editor-side diagnostics.
+#
+# Keep the rule set roughly in sync with .markdownlint-cli2.jsonc.
+# Note that rumdl's rule options are not a superset of markdownlint's —
+# some cli2-specific knobs (e.g. MD009 code-blocks/strict) simply don't
+# exist in rumdl, so those are expressed only in the jsonc file.
+
+[global]
+# Rules disabled — same IDs as in .markdownlint-cli2.jsonc.
+disable = [
+  "MD013", # line length — free (LLM may write long summary lines)
+  "MD024", # duplicate headings — allowed (log.md repeats date headers)
+  "MD033", # inline HTML — allowed
+  "MD036", # emphasis as heading — allowed
+  "MD041", # first line must be a heading — not needed (frontmatter comes first)
+  "MD060", # table pipe style — allowed
+]
+
+# Respect .gitignore while walking the tree (same semantics as
+# `"gitignore": true` in the cli2 config). Default is already true; keep
+# it explicit so intent is readable.
+respect_gitignore = true
+
+# Skip cloned source repos, scratch tmp/, and Serena's local state.
+# `.gitignore` already excludes these paths and respect-gitignore would
+# catch part of it, but listing them here makes the intent obvious when
+# someone reads just this file.
+exclude = [
+  "raw/repos/**",
+  "tmp/**",
+  ".serena/**",
+]
+
+[MD025]
+# TOML literal string (single quotes) preserves the regex backslashes.
+# Treats frontmatter `title:` as the page H1, so body `# Heading` does
+# not trip MD025 (multiple top-level headings).
+front-matter-title = '^\s*title\s*[:=]'

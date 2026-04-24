@@ -1,0 +1,38 @@
+{
+  // markdownlint-cli2 configuration.
+  //
+  // This project uses BOTH rumdl (see .rumdl.toml) and markdownlint-cli2.
+  // - davidanson.vscode-markdownlint reads this file for editor diagnostics.
+  // - rvben.rumdl + rumdl CLI read .rumdl.toml.
+  // The two configs express the same intent; diverge only where one linter
+  // supports options the other doesn't (e.g. MD009 code-blocks/strict is
+  // markdownlint-specific and absent here would mean it just isn't enforced
+  // in the rumdl pass — which is acceptable since rumdl still catches the
+  // underlying trailing-space issue).
+  //
+  // The base settings follow ~/dotfiles/.markdownlint-cli2.jsonc and add
+  // wiki-specific tweaks (MD025 front_matter_title, ignore raw/repos).
+  "config": {
+    "default": true,
+    "MD009": {
+      "code_blocks": true,
+      "strict": true
+    }, // 行末の空白を禁じる
+    "MD013": false, // 行の長さは自由（LLM が長い要約文を書くため）
+    "MD024": false, // 重複した見出しを許可（log.md の日付見出しなどで衝突しうる）
+    "MD025": {
+      "front_matter_title": "^\\s*title\\s*[:=]"
+    }, // frontmatter の title: を H1 と見なして本文 H1 との二重を防ぐ
+    "MD033": false, // HTML タグを許可
+    "MD036": false, // 強調表示の過剰使用を許可
+    "MD041": false, // ファイルの最初の行を見出しにする必要なし（frontmatter 始まりなので）
+    "MD060": false // 表の列スタイルの不一致を許可
+  },
+  "gitignore": true,
+  "ignores": [
+    "raw/repos/**", // clone した外部 repo は gitignore でも除外されるが明示
+    "tmp/**",
+    ".serena/**" // Serena のローカル状態・メモは repo 本体の文書対象外
+  ],
+  "globs": ["**/*.md"]
+}

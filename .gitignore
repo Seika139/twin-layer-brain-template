@@ -1,0 +1,37 @@
+.DS_Store
+._*
+*.swp
+*.tmp
+.vscode/*.log
+.rumdl_cache/
+
+# Scratch / experimentation area.
+/tmp/
+
+# Cloned source repositories — large, licensed separately, reproducible
+# from upstream, and contain nested .git directories. Keep them out of
+# the parent repo regardless of this brain's public/private status.
+/raw/repos/
+
+# Query-time analysis snapshots. Not canonical and go stale fast; private
+# introspection tends to land here. Delete the contents-exclude line if
+# your brain is private and you want analyses versioned.
+/wiki/analyses/*
+!/wiki/analyses/.gitkeep
+
+# Obsidian per-machine workspace state. Shared policy files
+# (app.json, core-plugins.json, community-plugins.json) stay tracked;
+# the state below is local to each user and would only create diff noise.
+/.obsidian/workspace*.json
+/.obsidian/workspaces.json
+/.obsidian/cache
+/.obsidian/graph.json
+/.obsidian/hotkeys.json
+/.obsidian/plugins/
+/.obsidian/snippets/
+/.obsidian/themes/
+/.obsidian/appearance.json
+
+# Shared VS Code settings for the template (override any global .vscode/* ignore).
+!.vscode/extensions.json
+!.vscode/settings.json

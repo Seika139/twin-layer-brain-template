@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "foam.foam-vscode",
+    "yzhang.markdown-all-in-one",
+    "bierner.markdown-mermaid",
+    "davidanson.vscode-markdownlint",
+    "rvben.rumdl",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+  "search.exclude": {
+    "raw/repos/**": true,
+    "tmp/**": true
+  },
+  "markdown.preview.breaks": true,
+  "foam.files.defaultExtension": ".md",
+  "foam.files.noteIdentifiers": "relative",
+  "editor.wordWrap": "on",
+  "cSpell.words": [
+    "behaviour",
+    "bierner",
+    "callees",
+    "davidanson",
+    "dotfiles",
+    "Foam",
+    "frontmatter",
+    "gitignored",
+    "karpathy",
+    "markdownlint",
+    "Marp",
+    "Mermaid",
+    "neighbours",
+    "Obsidian",
+    "rumdl",
+    "rvben",
+    "summarisation",
+    "summarise",
+    "unsourced",
+    "yzhang"
+  ]
+}

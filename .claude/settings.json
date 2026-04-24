@@ -1,0 +1,36 @@
+{
+  "$comment": [
+    "Claude Code settings for brain-accelerator.",
+    "- raw/notes/ is the user's own notes: never edit (only the user writes here).",
+    "- raw/{articles,assets,repos}/ is external material; agent may read, not edit.",
+    "- wiki/ is agent-owned and freely writable (canonical + analyses).",
+    "- PostToolUse hook runs rumdl --fix on any edited markdown so lint",
+    "  drift never accumulates silently between operations."
+  ],
+  "permissions": {
+    "deny": [
+      "Edit(raw/notes/**)",
+      "Write(raw/notes/**)"
+    ],
+    "ask": [
+      "Edit(CLAUDE.md)",
+      "Edit(AGENTS.md)",
+      "Edit(.agents/skills/**)",
+      "Edit(.claude/skills/**)",
+      "Write(.agents/skills/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | grep -E '\\.md$' | xargs -r -I{} rumdl check --fix {} >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}
