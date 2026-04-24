@@ -18,6 +18,19 @@ Answer a question from the wiki, not from scratch.
 
 This is always step 1. Identify which Sources / Entities / Concepts pages are relevant.
 
+### 1.5. (twin-layer-brain) Optionally shortlist with Layer 1
+
+This brain has an SQLite search layer (FTS5 + embeddings). If the question is
+narrow or the index is large, use MCP / `kc search` to shortlist candidate
+pages **before** reading the wiki:
+
+- `search_notes` (FTS5) — fast keyword match
+- `search_similar_notes` (embedding) — semantic near-neighbours (needs API key)
+
+The shortlist is a **hint**. The actual reading, citation, and synthesis still
+happen via `wiki/index.md` → relevant pages → `[[wiki-link]]` traversal. Never
+synthesize from raw SQL hits alone — that loses compound.
+
 ### 2. Read relevant pages (not raw/)
 
 Pull in the pages from step 1. Follow their `[[wiki-links]]` to related pages if needed.

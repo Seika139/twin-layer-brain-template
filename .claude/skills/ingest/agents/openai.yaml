@@ -1,4 +1,0 @@
-interface:
-  display_name: "Wiki Ingest"
-  short_description: "raw/ を取り込み、新規ページだけでなく既存 wiki/ ページにも知見を波及させる"
-  default_prompt: "Use this skill to ingest sources from raw/notes/, raw/articles/, raw/assets/, or raw/repos/ into wiki/. Treat ingest as a knowledge-growth operation that updates both new and existing pages, propagate 10–15 pages per substantive source, keep raw/ immutable, preserve contradictions with Superseded-by notes, add tags and reciprocal [[wiki-links]], and update wiki/index.md and wiki/log.md."

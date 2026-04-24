@@ -77,20 +77,33 @@ def create_note_file(
     return filepath
 
 
+_BUCKET_TO_KIND = {
+    # wiki/ 配下 (Layer 2 所有)
+    "sources": "source",
+    "entities": "entity",
+    "concepts": "concept",
+    "topics": "topic",
+    "analyses": "analysis",
+    # raw/ 配下 (人間所有)
+    "notes": "note",
+    "articles": "article",
+    "assets": "asset",
+    "repos": "repo",
+}
+
+
 def _guess_kind(path: Path) -> str:
-    """Guess the kind based on directory."""
+    """Guess the kind from the repo-relative directory.
+
+    twin-layer-brain のパスは `raw/<bucket>/` または `wiki/<bucket>/` の形式で、
+    `<bucket>` が種別を示す (raw/notes, wiki/entities 等)。
+    """
     parts = path.parts
-    for part in parts:
-        if part == "daily":
-            return "log"
-        if part == "projects":
-            return "project"
-        if part == "raw":
-            return "raw"
-        if part == "inbox":
-            return "inbox"
-        if part == "people":
-            return "person"
+    for anchor in ("wiki", "raw"):
+        if anchor in parts:
+            idx = parts.index(anchor)
+            if idx + 1 < len(parts):
+                return _BUCKET_TO_KIND.get(parts[idx + 1], "note")
     return "note"
 
 

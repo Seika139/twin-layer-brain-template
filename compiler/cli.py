@@ -18,7 +18,9 @@ def main() -> None:
     p_new.add_argument("title", help="Note title")
     p_new.add_argument("--kind", default="note", help="Note kind (default: note)")
     p_new.add_argument(
-        "--dir", default="notes", help="Target directory (default: notes)"
+        "--dir",
+        default="raw/notes",
+        help="Target directory (default: raw/notes)",
     )
     p_new.add_argument("--tags", nargs="*", default=[], help="Tags")
 

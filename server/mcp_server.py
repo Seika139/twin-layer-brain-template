@@ -12,7 +12,7 @@ from compiler.search import read_note as _read_note
 from compiler.search import search_fts, search_similar, suggest_related
 
 mcp = FastMCP(
-    "SecondBrain",
+    "TwinLayerBrain",
     stateless_http=False,
     json_response=False,
     streamable_http_path="/",
@@ -74,11 +74,11 @@ def suggest_related_notes(id_or_path: str, limit: int = 5) -> str:
 @mcp.tool()
 def create_note(
     title: str,
-    kind: str = "raw",
-    directory: str = "raw",
+    kind: str = "note",
+    directory: str = "raw/notes",
     tags: list[str] | None = None,
 ) -> str:
-    """Create a new Markdown note with frontmatter. Defaults to raw/ for triage."""
+    """Create a new Markdown note with frontmatter. Defaults to `raw/notes/` (user notes)."""
     target_dir = BASE_DIR / directory
     filepath = create_note_file(directory=target_dir, title=title, kind=kind, tags=tags)
     note = parse_note(filepath)

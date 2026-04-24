@@ -47,7 +47,7 @@ async def clip(req: ClipRequest) -> NoteResponse:
     body = "\n\n".join(body_parts) if body_parts else None
 
     filepath = create_note_file(
-        directory=BASE_DIR / "raw" / "clips",
+        directory=BASE_DIR / "raw" / "articles",
         title=req.title,
         kind="raw",
         tags=all_tags,
