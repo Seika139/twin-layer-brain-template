@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from compiler.config import BASE_DIR
+from compiler.paths import BASE_DIR
 
 
 def load_dotenv() -> None:
