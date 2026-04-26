@@ -6,16 +6,18 @@ from compiler.embedding import generate_embedding, is_embedding_available
 from compiler.indexer import ensure_db
 from compiler.models import Note
 
+_FTS_OPERATORS = '-+*():"'
+
 
 def _normalize_fts_query(query: str) -> str:
     """Wrap user queries so FTS5 doesn't crash on operators or stray quotes."""
     stripped = query.strip()
     if stripped.startswith('"') and stripped.endswith('"') and stripped.count('"') == 2:
         return query
-    sanitized = query.replace('"', "")
-    if any(c in sanitized for c in "-+*()"):
-        return f'"{sanitized}"'
-    return sanitized
+    if any(c in query for c in _FTS_OPERATORS):
+        escaped = query.replace('"', '""')
+        return f'"{escaped}"'
+    return query
 
 
 def search_fts(query: str, limit: int = 20) -> list[Note]:
