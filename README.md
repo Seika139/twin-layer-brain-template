@@ -56,9 +56,9 @@ pnpm install
 # 3. Empty the inherited content and reset index.md / log.md to skeletons.
 mise run scaffold-brain
 
-# 4. Rewrite the Scope line in README.md and CLAUDE.md to describe what
-#    this brain covers. Starting with a one-line scope keeps ingest
-#    decisions sharp ("does this source fit this brain?").
+# 4. Rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md to
+#    describe what this brain covers. Starting with a one-line scope keeps
+#    ingest decisions sharp ("does this source fit this brain?").
 
 # 5. Commit and push.
 git add -A
