@@ -98,7 +98,7 @@ Entry types: \`ingest\`, \`query\`, \`lint\`, \`refactor\`.
 ## [${TODAY}] refactor | initialise brain from template
 
 - Scaffolded from the twin-layer-brain template.
-- Next: rewrite the Scope line in README.md and CLAUDE.md, then ingest the first source.
+- Next: rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md, then ingest the first source.
 EOF
 echo "  - reset wiki/log.md"
 
