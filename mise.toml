@@ -91,6 +91,12 @@ launchctl print "gui/$(id -u)/${BRAIN_LABEL}" 2>/dev/null \
   || echo "not running"
 """
 
+# --- Python ----------------------------------------------------------------
+
+[tasks.test]
+description = "Run the Python test suite"
+run = "uv run pytest"
+
 # --- Lint ------------------------------------------------------------------
 
 [tasks.lint]
