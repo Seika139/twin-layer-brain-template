@@ -6,6 +6,19 @@ from compiler.embedding import generate_embedding, is_embedding_available
 from compiler.indexer import ensure_db
 from compiler.models import Note
 
+_FTS_OPERATORS = '-+*():"'
+
+
+def _normalize_fts_query(query: str) -> str:
+    """Wrap user queries so FTS5 doesn't crash on operators or stray quotes."""
+    stripped = query.strip()
+    if stripped.startswith('"') and stripped.endswith('"') and stripped.count('"') == 2:
+        return query
+    if any(c in query for c in _FTS_OPERATORS):
+        escaped = query.replace('"', '""')
+        return f'"{escaped}"'
+    return query
+
 
 def search_fts(query: str, limit: int = 20) -> list[Note]:
     """Full-text search using FTS5 trigram."""
@@ -20,7 +33,7 @@ def search_fts(query: str, limit: int = 20) -> list[Note]:
         ORDER BY rank
         LIMIT ?
         """,
-        (query, limit),
+        (_normalize_fts_query(query), limit),
     ).fetchall()
     conn.close()
     return [_row_to_note(r) for r in rows]
