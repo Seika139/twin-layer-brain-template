@@ -1,12 +1,8 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
-# Computed locally instead of `from compiler.config import BASE_DIR` to avoid
-# evaluating `compiler.config` (which reads BRAIN_PORT etc. at module load)
-# before `load_dotenv()` has populated `os.environ`.
-BASE_DIR = Path(__file__).resolve().parent.parent
+from compiler.paths import BASE_DIR
 
 
 def load_dotenv() -> None:
