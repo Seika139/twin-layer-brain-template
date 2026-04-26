@@ -7,6 +7,15 @@ from compiler.indexer import ensure_db
 from compiler.models import Note
 
 
+def _normalize_fts_query(query: str) -> str:
+    """Wrap unquoted queries containing FTS5 operators (`-`, `+`, `*`, `()`) as a phrase."""
+    if '"' in query:
+        return query
+    if any(c in query for c in '-+*()'):
+        return f'"{query}"'
+    return query
+
+
 def search_fts(query: str, limit: int = 20) -> list[Note]:
     """Full-text search using FTS5 trigram."""
     conn = ensure_db()
@@ -20,7 +29,7 @@ def search_fts(query: str, limit: int = 20) -> list[Note]:
         ORDER BY rank
         LIMIT ?
         """,
-        (query, limit),
+        (_normalize_fts_query(query), limit),
     ).fetchall()
     conn.close()
     return [_row_to_note(r) for r in rows]
