@@ -12,7 +12,7 @@
 #   - Rewrites wiki/index.md and wiki/log.md to empty frontmatter-only form.
 #   - Leaves CLAUDE.md, AGENTS.md, README.md, GUIDE.md, the skill packages,
 #     and compiler/server infra untouched (you edit the Scope line in
-#     README.md and CLAUDE.md by hand).
+#     CLAUDE.md, AGENTS.md, and README.md by hand).
 #
 # Safety: refuses to run in a directory literally named twin-layer-brain-template
 # (the template itself) unless FORCE=1 is set.
@@ -98,12 +98,12 @@ Entry types: \`ingest\`, \`query\`, \`lint\`, \`refactor\`.
 ## [${TODAY}] refactor | initialise brain from template
 
 - Scaffolded from the twin-layer-brain template.
-- Next: rewrite the Scope line in README.md and CLAUDE.md, then ingest the first source.
+- Next: rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md, then ingest the first source.
 EOF
 echo "  - reset wiki/log.md"
 
 echo ""
 echo "Next steps:"
-echo "  1. Rewrite the Scope line in README.md and CLAUDE.md."
+echo "  1. Rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md."
 echo "  2. git add -A && git commit -m \"ブレインの初期スコープを設定\""
 echo "  3. Drop a source into raw/notes/ (or run \`mise run clone-repo\`) and ingest it."
