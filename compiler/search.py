@@ -8,12 +8,14 @@ from compiler.models import Note
 
 
 def _normalize_fts_query(query: str) -> str:
-    """Wrap unquoted queries containing FTS5 operators (`-`, `+`, `*`, `()`) as a phrase."""
-    if '"' in query:
+    """Wrap user queries so FTS5 doesn't crash on operators or stray quotes."""
+    stripped = query.strip()
+    if stripped.startswith('"') and stripped.endswith('"') and stripped.count('"') == 2:
         return query
-    if any(c in query for c in '-+*()'):
-        return f'"{query}"'
-    return query
+    sanitized = query.replace('"', "")
+    if any(c in sanitized for c in "-+*()"):
+        return f'"{sanitized}"'
+    return sanitized
 
 
 def search_fts(query: str, limit: int = 20) -> list[Note]:
