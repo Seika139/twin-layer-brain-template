@@ -6,7 +6,7 @@ from compiler.embedding import generate_embedding, is_embedding_available
 from compiler.indexer import ensure_db
 from compiler.models import Note
 
-_FTS_OPERATOR_CHARS = '-+*():"'
+_FTS_OPERATOR_CHARS = '-+*():"/^.'
 # FTS5 treats only the uppercase forms as boolean / proximity operators.
 _FTS_BAREWORD_OPERATORS = frozenset({"AND", "OR", "NOT", "NEAR"})
 
@@ -16,11 +16,9 @@ def _normalize_fts_query(query: str) -> str:
     stripped = query.strip()
     if stripped.startswith('"') and stripped.endswith('"') and stripped.count('"') == 2:
         return query
-    has_operator_char = any(c in query for c in _FTS_OPERATOR_CHARS)
-    has_bareword_operator = any(
+    if any(c in query for c in _FTS_OPERATOR_CHARS) or any(
         token in _FTS_BAREWORD_OPERATORS for token in query.split()
-    )
-    if has_operator_char or has_bareword_operator:
+    ):
         escaped = query.replace('"', '""')
         return f'"{escaped}"'
     return query

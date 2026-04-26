@@ -22,6 +22,12 @@ from compiler.search import _normalize_fts_query
         ("a+b*c", '"a+b*c"'),
         ("(group)", '"(group)"'),
         ("col:value", '"col:value"'),
+        # FTS5 also rejects raw `^`, `/`, and `.` outside phrases (verified on SQLite).
+        ("^foo", '"^foo"'),
+        ("foo/bar", '"foo/bar"'),
+        ("path/to/file", '"path/to/file"'),
+        ("foo.bar", '"foo.bar"'),
+        ("alpha.beta.gamma", '"alpha.beta.gamma"'),
         # Bareword operators (uppercase only): escape and wrap.
         ("foo AND bar", '"foo AND bar"'),
         ("apple OR juice", '"apple OR juice"'),
