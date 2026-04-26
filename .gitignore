@@ -5,6 +5,13 @@
 .vscode/*.log
 .rumdl_cache/
 
+# Python bytecode cache.
+__pycache__/
+*.pyc
+
+# Layer 1 derived index. Regenerable from raw/ via `kc index`.
+/index/
+
 # Scratch / experimentation area.
 /tmp/
 
