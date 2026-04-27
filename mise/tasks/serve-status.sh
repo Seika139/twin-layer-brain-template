@@ -5,4 +5,4 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/server.sh"
-dispatch_server_task status
+dispatch_server_task status "$@"
