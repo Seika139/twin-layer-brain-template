@@ -42,6 +42,8 @@ mise run serve-uninstall
 
 wrapper は実行時に OS を判定します。
 
+`serve-status` はデフォルトで state / pid / restarts / last exit / port / `/api/health` の要約のみ表示します。`launchctl print` や `systemctl status` の生出力を見たい場合は `VERBOSE=1 mise run serve-status` で切り替えられます。
+
 | OS    | wrapper の内部処理       |
 | ----- | ------------------------ |
 | macOS | `serve-launchd-*` を実行 |

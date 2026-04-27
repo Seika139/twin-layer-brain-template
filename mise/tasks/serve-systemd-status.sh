@@ -11,6 +11,45 @@ require_systemctl_user
 SERVICE="$(systemd_service_name)"
 PORT="$(brain_port)"
 
-systemctl --user status "$SERVICE" --no-pager
-curl -sf "http://localhost:${PORT}/api/health"
-echo ""
+if ! systemctl --user cat "$SERVICE" >/dev/null 2>&1; then
+  echo "systemd --user service は登録されていません: $SERVICE"
+  echo "  install: mise run serve-install"
+  exit 1
+fi
+
+if [[ "${VERBOSE:-0}" == "1" ]]; then
+  systemctl --user status "$SERVICE" --no-pager || true
+  echo ""
+  echo "--- recent journal (last 20) ---"
+  journalctl --user -u "$SERVICE" -n 20 --no-pager || true
+  echo ""
+fi
+
+show_field() {
+  systemctl --user show "$SERVICE" -p "$1" --value 2>/dev/null
+}
+
+active_state="$(show_field ActiveState)"
+sub_state="$(show_field SubState)"
+main_pid="$(show_field MainPID)"
+n_restarts="$(show_field NRestarts)"
+exec_status="$(show_field ExecMainStatus)"
+
+printf 'service   : %s\n' "$SERVICE"
+printf 'state     : %s/%s\n' "${active_state:-unknown}" "${sub_state:-unknown}"
+printf 'pid       : %s\n' "${main_pid:-(none)}"
+printf 'restarts  : %s\n' "${n_restarts:-0}"
+printf 'last exit : %s\n' "${exec_status:-(none)}"
+printf 'port      : %s\n' "$PORT"
+
+printf 'health    : '
+if curl -sf -m 2 "http://localhost:${PORT}/api/health" >/dev/null; then
+  echo "200 OK"
+else
+  echo "(no response on :${PORT})"
+fi
+
+if [[ "${VERBOSE:-0}" != "1" ]]; then
+  echo ""
+  echo "詳細を見る場合: VERBOSE=1 mise run serve-status"
+fi
