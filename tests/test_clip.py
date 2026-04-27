@@ -5,8 +5,15 @@ from pathlib import Path
 import frontmatter
 from fastapi.testclient import TestClient
 
+from compiler.frontmatter import parse_note
 from server.app import fastapi_app
 from server.routes import clip as clip_route
+
+
+def _stub_indexer(monkeypatch) -> None:
+    """Avoid touching the real SQLite DB during clip tests."""
+    monkeypatch.setattr(clip_route, "upsert_note_index", parse_note)
+    monkeypatch.setattr(clip_route, "update_note_embedding", lambda *a, **k: None)
 
 
 def test_clip_requires_bearer_token(monkeypatch) -> None:
@@ -38,7 +45,7 @@ def test_clip_uses_ai_summary_when_llm_returns_content(
 
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
     monkeypatch.setattr(clip_route, "summarize_page", fake_summarize_page)
 
     client = TestClient(fastapi_app)
@@ -79,7 +86,7 @@ def test_clip_falls_back_to_mechanical_content(
 
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
     monkeypatch.setattr(clip_route, "summarize_page", fake_summarize_page)
 
     client = TestClient(fastapi_app)
@@ -119,7 +126,7 @@ def test_clip_falls_back_when_llm_raises(
 
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
     monkeypatch.setattr(clip_route, "summarize_page", fake_summarize_page)
 
     client = TestClient(fastapi_app)
@@ -159,7 +166,7 @@ def test_clip_records_when_llm_is_skipped(
 
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
     monkeypatch.setattr(clip_route, "summarize_page", fake_summarize_page)
 
     client = TestClient(fastapi_app)
@@ -191,7 +198,7 @@ def test_clip_updates_same_url_file(
 ) -> None:
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
 
     client = TestClient(fastapi_app)
     first = client.post(
@@ -238,7 +245,7 @@ def test_clip_same_title_different_url_creates_different_files(
 ) -> None:
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
 
     client = TestClient(fastapi_app)
     first = client.post(
@@ -278,7 +285,7 @@ def test_clip_uses_browser_canonical_url_as_identity(
 ) -> None:
     monkeypatch.setenv("BRAIN_API_TOKEN", "secret")
     monkeypatch.setattr(clip_route, "BASE_DIR", tmp_path)
-    monkeypatch.setattr(clip_route, "rebuild_index", lambda: 1)
+    _stub_indexer(monkeypatch)
 
     client = TestClient(fastapi_app)
     first = client.post(

@@ -15,8 +15,8 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from compiler.paths import BASE_DIR
-from compiler.frontmatter import parse_note, write_note_file
-from compiler.indexer import rebuild_index
+from compiler.frontmatter import write_note_file
+from compiler.indexer import update_note_embedding, upsert_note_index
 from server.auth import require_token
 from server.llm import summarize_page
 from server.routes.notes import NoteResponse
@@ -123,10 +123,13 @@ async def clip(req: ClipRequest, background_tasks: BackgroundTasks) -> ClipRespo
         related=existing.get("related") or [],
         status=existing.get("status", "active"),
     )
-    note = await run_in_threadpool(parse_note, filepath)
-    # The full FTS5 + sqlite-vec rebuild can take seconds once the wiki grows;
-    # defer it until after the response so the clipper UI does not stall.
-    background_tasks.add_task(rebuild_index)
+    # FTS5 (keyword search) reflects the new note immediately; embedding
+    # generation hits an external API, so defer that to a background task
+    # to keep the clipper UI responsive.
+    note = await run_in_threadpool(upsert_note_index, filepath)
+    background_tasks.add_task(
+        update_note_embedding, note.note_id, note.title, note.body_text
+    )
     base = NoteResponse.from_note(note)
     return ClipResponse(
         **base.model_dump(),
