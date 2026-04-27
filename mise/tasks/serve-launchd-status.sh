@@ -8,6 +8,22 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/server.sh"
 require_launchctl
 
+verbose=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -v | --verbose)
+    verbose=1
+    ;;
+  *)
+    echo "unknown argument: $1" >&2
+    echo "usage: mise run serve-status [-v|--verbose]" >&2
+    exit 2
+    ;;
+  esac
+  shift
+done
+[[ "${VERBOSE:-0}" == "1" ]] && verbose=1
+
 LABEL="$(brain_label)"
 PORT="$(brain_port)"
 SERVICE_TARGET="gui/$(id -u)/${LABEL}"
@@ -18,7 +34,7 @@ raw="$(launchctl print "$SERVICE_TARGET" 2>/dev/null)" || {
   exit 1
 }
 
-if [[ "${VERBOSE:-0}" == "1" ]]; then
+if [[ "$verbose" == "1" ]]; then
   printf '%s\n' "$raw"
   echo ""
 fi
@@ -52,7 +68,7 @@ else
   echo "(no response on :${PORT})"
 fi
 
-if [[ "${VERBOSE:-0}" != "1" ]]; then
+if [[ "$verbose" != "1" ]]; then
   echo ""
-  echo "詳細を見る場合: VERBOSE=1 mise run serve-status"
+  echo "詳細を見る場合: mise run serve-status -v"
 fi

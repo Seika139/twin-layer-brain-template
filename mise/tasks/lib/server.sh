@@ -42,13 +42,14 @@ brain_port() {
 dispatch_server_task() {
   local action os
   action="$1"
+  shift
   os="$(uname -s)"
   case "$os" in
   Darwin)
-    exec "$(brain_root)/mise/tasks/serve-launchd-${action}.sh"
+    exec "$(brain_root)/mise/tasks/serve-launchd-${action}.sh" "$@"
     ;;
   Linux)
-    exec "$(brain_root)/mise/tasks/serve-systemd-${action}.sh"
+    exec "$(brain_root)/mise/tasks/serve-systemd-${action}.sh" "$@"
     ;;
   *)
     echo "未対応 OS です: $os" >&2

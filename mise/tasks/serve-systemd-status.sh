@@ -8,6 +8,22 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/server.sh"
 require_systemctl_user
 
+verbose=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -v | --verbose)
+    verbose=1
+    ;;
+  *)
+    echo "unknown argument: $1" >&2
+    echo "usage: mise run serve-status [-v|--verbose]" >&2
+    exit 2
+    ;;
+  esac
+  shift
+done
+[[ "${VERBOSE:-0}" == "1" ]] && verbose=1
+
 SERVICE="$(systemd_service_name)"
 PORT="$(brain_port)"
 
@@ -17,7 +33,7 @@ if ! systemctl --user cat "$SERVICE" >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ "${VERBOSE:-0}" == "1" ]]; then
+if [[ "$verbose" == "1" ]]; then
   systemctl --user status "$SERVICE" --no-pager || true
   echo ""
   echo "--- recent journal (last 20) ---"
@@ -49,7 +65,7 @@ else
   echo "(no response on :${PORT})"
 fi
 
-if [[ "${VERBOSE:-0}" != "1" ]]; then
+if [[ "$verbose" != "1" ]]; then
   echo ""
-  echo "詳細を見る場合: VERBOSE=1 mise run serve-status"
+  echo "詳細を見る場合: mise run serve-status -v"
 fi

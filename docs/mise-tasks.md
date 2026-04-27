@@ -155,7 +155,7 @@ mise run serve-logs
 mise run serve-uninstall
 ```
 
-`serve-status` はデフォルトで state / pid / restarts / last exit / port / `/api/health` の要約だけを表示します。`launchctl print` や `systemctl status` の生出力が必要な場合は `VERBOSE=1 mise run serve-status` で切り替えます。
+`serve-status` はデフォルトで state / pid / restarts / last exit / port / `/api/health` の要約だけを表示します。`launchctl print` や `systemctl status` の生出力が必要な場合は `mise run serve-status -v` (または `--verbose`) で切り替えます。
 
 明示的に OS 別 task を呼ぶこともできます。
 
