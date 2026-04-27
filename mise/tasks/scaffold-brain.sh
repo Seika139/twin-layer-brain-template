@@ -106,6 +106,22 @@ EOF
 echo "  - reset wiki/log.md"
 
 echo ""
+
+# 4. Scan the three Scope-bearing files for placeholder strings the user must
+#    rewrite. Surfacing them at scaffold time prevents the AGENTS.md-was-missed
+#    incident where one of the three files silently kept its template marker.
+remaining=()
+for f in CLAUDE.md AGENTS.md README.md; do
+    if [[ -f "$ROOT_DIR/$f" ]] && grep -q -e "<このブレインが扱う範囲" -e "<ここにこのブレインが" "$ROOT_DIR/$f"; then
+        remaining+=("$f")
+    fi
+done
+if (( ${#remaining[@]} > 0 )); then
+    echo "[warn] Scope placeholder still present in: ${remaining[*]}" >&2
+    echo "       Open each file and replace the placeholder with this brain's scope." >&2
+    echo ""
+fi
+
 echo "Next steps:"
 echo "  1. Rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md."
 echo "  2. git add -A && git commit -m \"ブレインの初期スコープを設定\""
