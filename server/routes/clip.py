@@ -10,12 +10,13 @@ from typing import Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import frontmatter
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 from compiler.paths import BASE_DIR
-from compiler.frontmatter import parse_note, write_note_file
-from compiler.indexer import rebuild_index
+from compiler.frontmatter import write_note_file
+from compiler.indexer import update_note_embedding, upsert_note_index
 from server.auth import require_token
 from server.llm import summarize_page
 from server.routes.notes import NoteResponse
@@ -48,7 +49,7 @@ _TRACKING_QUERY_KEYS = {
 
 
 @router.post("", status_code=201)
-async def clip(req: ClipRequest) -> ClipResponse:
+async def clip(req: ClipRequest, background_tasks: BackgroundTasks) -> ClipResponse:
     page_content = req.content or ""
     llm_requested = not req.skip_llm
     identity_url = req.canonical_url or req.url
@@ -57,8 +58,12 @@ async def clip(req: ClipRequest) -> ClipResponse:
     content_hash = _short_hash(page_content, length=16)
     clipped_at = datetime.now(timezone.utc).astimezone().isoformat()
     article_dir = BASE_DIR / "raw" / "articles"
-    filepath = _resolve_clip_path(article_dir, req.title, canonical_url, url_hash)
-    existing = _read_existing_metadata(filepath)
+    # Filesystem lookups touch disk; offload to a worker thread so the event
+    # loop stays responsive while we wait on the LLM call below.
+    filepath = await run_in_threadpool(
+        _resolve_clip_path, article_dir, req.title, canonical_url, url_hash
+    )
+    existing = await run_in_threadpool(_read_existing_metadata, filepath)
 
     if req.skip_llm:
         summary = ""
@@ -94,7 +99,8 @@ async def clip(req: ClipRequest) -> ClipResponse:
 
     body = "\n\n".join(body_parts) if body_parts else None
 
-    filepath = write_note_file(
+    filepath = await run_in_threadpool(
+        write_note_file,
         filepath=filepath,
         title=req.title,
         kind="raw",
@@ -117,8 +123,13 @@ async def clip(req: ClipRequest) -> ClipResponse:
         related=existing.get("related") or [],
         status=existing.get("status", "active"),
     )
-    note = parse_note(filepath)
-    rebuild_index()
+    # FTS5 (keyword search) reflects the new note immediately; embedding
+    # generation hits an external API, so defer that to a background task
+    # to keep the clipper UI responsive.
+    note = await run_in_threadpool(upsert_note_index, filepath)
+    background_tasks.add_task(
+        update_note_embedding, note.note_id, note.title, note.body_text
+    )
     base = NoteResponse.from_note(note)
     return ClipResponse(
         **base.model_dump(),

@@ -5,6 +5,8 @@ import sqlite3
 
 import sqlite_vec
 
+from pathlib import Path
+
 from compiler.config import CONTENT_DIRS
 from compiler.paths import BASE_DIR, DB_PATH, INDEX_DIR
 from compiler.embedding import generate_embedding, is_embedding_available
@@ -118,6 +120,40 @@ def _upsert_note(conn: sqlite3.Connection, note: Note) -> None:
             note.raw_markdown,
         ),
     )
+
+
+def upsert_note_index(filepath: Path) -> Note:
+    """Index a single note in place without rebuilding the entire DB.
+
+    FTS5 stays consistent via the `notes_au` trigger. Embeddings are not
+    touched here — call `update_note_embedding` (typically in a background
+    task) so the slow API round-trip does not block the response.
+    """
+    conn = ensure_db()
+    note = parse_note(filepath)
+    _upsert_note(conn, note)
+    conn.commit()
+    conn.close()
+    return note
+
+
+def update_note_embedding(note_id: str, title: str, body_text: str) -> None:
+    """Generate and store the embedding for a single note, if a provider is set."""
+    if not is_embedding_available():
+        return
+    text = f"{title}\n{body_text}".strip()
+    if not text:
+        return
+    vec = generate_embedding(text)
+    if vec is None:
+        return
+    conn = ensure_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO notes_vec (note_id, embedding) VALUES (?, ?)",
+        (note_id, vec),
+    )
+    conn.commit()
+    conn.close()
 
 
 def _rebuild_embeddings(conn: sqlite3.Connection) -> None:
