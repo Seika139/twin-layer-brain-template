@@ -5,9 +5,18 @@
 .vscode/*.log
 .rumdl_cache/
 
+# Local secrets / per-instance runtime configuration.
+/.env
+
 # Python bytecode cache.
 __pycache__/
 *.pyc
+/.pytest_cache/
+/.ruff_cache/
+/.venv/
+
+# Node dependencies.
+/node_modules/
 
 # Layer 1 derived index. Regenerable from raw/ via `kc index`.
 /index/

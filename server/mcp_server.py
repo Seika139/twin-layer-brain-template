@@ -78,7 +78,7 @@ def create_note(
     directory: str = "raw/notes",
     tags: list[str] | None = None,
 ) -> str:
-    """Create a new Markdown note with frontmatter. Defaults to `raw/notes/` (user notes)."""
+    """Create a Markdown note. Defaults to `raw/notes/` user notes."""
     target_dir = BASE_DIR / directory
     filepath = create_note_file(directory=target_dir, title=title, kind=kind, tags=tags)
     note = parse_note(filepath)

@@ -2,28 +2,28 @@
 
 Operating schema for Codex (OpenAI) agents maintaining this **twin-layer-brain**. This file is the Codex-facing companion to `CLAUDE.md`; keep them aligned. If they diverge, `CLAUDE.md` is the source of truth and this file should be updated to match.
 
-Based on karpathy's "LLM Wiki" pattern: <https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>. Extended with a Layer 1 SQLite search (FTS5 + embeddings) exposed via `compiler/` (`kc` CLI) and `server/` (FastAPI + MCP). Writes always land on Markdown; Layer 1 re-indexes automatically.
+Based on karpathy's "LLM Wiki" pattern: <https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>. Extended with a Layer 1 SQLite search (FTS5 + embeddings) exposed via `compiler/` (`kc` CLI) and `server/` (FastAPI + MCP). Writes always land on Markdown; Layer 1 is rebuilt from Markdown via `kc index` or API-triggered `rebuild_index()`.
 
 ## Scope
 
 This brain covers: **<このブレインが扱う範囲を 1 行で書き換える>**
 
-One brain = one topic. Separate repos for separate concerns (work project / side domain / personal). See `README.md` → **Spin up a new brain** for the template workflow.
+One brain = one topic. Separate repos for separate concerns (work project / side domain / personal). See `README.md` and `docs/instance-setup.md` for the template workflow.
 
 ## Layout and ownership
 
 One flat tier. The default `.gitignore` only carves out cloned source repos (nested `.git`, reconstructible from upstream) and query-time analyses (snapshots, rot fast). Everything else is tracked regardless of whether this brain is eventually public or private.
 
-| Path | Git (default) | Owner | Role |
-|------|---------------|-------|------|
-| `raw/notes/` | tracked | user | own notes / transcripts. Immutable — agent never edits. |
-| `raw/articles/` | tracked | user | web clippings, PDFs. |
-| `raw/assets/` | tracked | user | images, diagrams. |
-| `raw/repos/` | **ignored** | user | cloned source repositories (`mise run clone-repo`). |
-| `wiki/index.md` | tracked | agent | catalog. |
-| `wiki/log.md` | tracked | agent | append-only operation log. |
-| `wiki/sources/`, `entities/`, `concepts/`, `topics/` | tracked | agent | one file per item. |
-| `wiki/analyses/` | **ignored** | agent | query-time snapshots (not canonical). |
+| Path                                                 | Git (default) | Owner | Role                                                    |
+| ---------------------------------------------------- | ------------- | ----- | ------------------------------------------------------- |
+| `raw/notes/`                                         | tracked       | user  | own notes / transcripts. Immutable — agent never edits. |
+| `raw/articles/`                                      | tracked       | user  | web clippings, PDFs.                                    |
+| `raw/assets/`                                        | tracked       | user  | images, diagrams.                                       |
+| `raw/repos/`                                         | **ignored**   | user  | cloned source repositories (`mise run clone-repo`).     |
+| `wiki/index.md`                                      | tracked       | agent | catalog.                                                |
+| `wiki/log.md`                                        | tracked       | agent | append-only operation log.                              |
+| `wiki/sources/`, `entities/`, `concepts/`, `topics/` | tracked       | agent | one file per item.                                      |
+| `wiki/analyses/`                                     | **ignored**   | agent | query-time snapshots (not canonical).                   |
 
 **Page type roles:**
 
@@ -165,7 +165,10 @@ Codex does not yet have an equivalent to Claude Code's `.claude/settings.json` `
 For a session that has touched many files, run the project-wide task instead:
 
 ```bash
-mise run lint-fix
+mise run format
+mise run lint
 ```
+
+Use `mise run format --all` and `mise run lint --all` when Python or shell task files were also touched.
 
 This is the Codex-side counterpart to the Claude Code hook configured in `.claude/settings.json`.

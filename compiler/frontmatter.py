@@ -48,29 +48,56 @@ def create_note_file(
     tags: list[str] | None = None,
     body: str | None = None,
     sources: list[str] | None = None,
+    metadata: dict[str, object] | None = None,
 ) -> Path:
     """Create a new Markdown file with frontmatter template."""
-    note_id = f"{kind}-{uuid.uuid4().hex[:8]}"
-    now = datetime.now(timezone.utc).astimezone().isoformat()
     slug = title.lower().replace(" ", "-")
     filename = f"{slug}.md"
     filepath = directory / filename
 
+    return write_note_file(
+        filepath=filepath,
+        title=title,
+        kind=kind,
+        tags=tags,
+        body=body,
+        sources=sources,
+        metadata=metadata,
+    )
+
+
+def write_note_file(
+    filepath: Path,
+    title: str,
+    kind: str = "note",
+    tags: list[str] | None = None,
+    body: str | None = None,
+    sources: list[str] | None = None,
+    metadata: dict[str, object] | None = None,
+    note_id: str | None = None,
+    created_at: object | None = None,
+    related: list[str] | None = None,
+    status: str = "active",
+) -> Path:
+    """Write a Markdown note file, preserving caller-provided identity fields."""
+    now = datetime.now(timezone.utc).astimezone().isoformat()
     body_text = body if body is not None else f"# {title}\n"
 
     content = frontmatter.Post(
         content=body_text,
         handler=frontmatter.YAMLHandler(),
-        id=note_id,
+        id=note_id or f"{kind}-{uuid.uuid4().hex[:8]}",
         title=title,
         kind=kind,
         tags=tags or [],
-        created_at=now,
+        created_at=created_at or now,
         updated_at=now,
         sources=sources or [],
-        related=[],
-        status="active",
+        related=related or [],
+        status=status,
     )
+    if metadata:
+        content.metadata.update(metadata)
 
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text(frontmatter.dumps(content) + "\n", encoding="utf-8")

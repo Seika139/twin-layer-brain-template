@@ -11,7 +11,7 @@
   // underlying trailing-space issue).
   //
   // The base settings follow ~/dotfiles/.markdownlint-cli2.jsonc and add
-  // wiki-specific tweaks (MD025 front_matter_title, ignore raw/repos).
+  // wiki-specific tweaks (MD025 front_matter_title, ignore raw/repos and web-clipped raw/articles).
   "config": {
     "default": true,
     "MD009": {
@@ -31,6 +31,8 @@
   "gitignore": true,
   "ignores": [
     "raw/repos/**", // clone した外部 repo は gitignore でも除外されるが明示
+    "raw/articles/**", // Web clip は外部本文を含む source material なので整形しない
+    "node_modules/**",
     "tmp/**",
     ".serena/**" // Serena のローカル状態・メモは repo 本体の文書対象外
   ],

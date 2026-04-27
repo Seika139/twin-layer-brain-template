@@ -34,7 +34,7 @@
 
 karpathy gist には明示されていない拡張オペレーション。
 
-- **Sublime** — cyg-sercuit/llm-wiki が先行導入した knowledge promotion レーン。query で生まれた valuable analysis、複数 page に分散している recurring claim、dated page が de-facto 入口化する現象に対処する。
+- **Sublime** — llm-wiki が先行導入した knowledge promotion レーン。query で生まれた valuable analysis、複数 page に分散している recurring claim、dated page が de-facto 入口化する現象に対処する。
 - **Dive** — 本 repo 独自の exception レーン。wiki 優先の原則を保ちつつ、user が「wiki では不十分」と判断している時 or 最新 repo 更新を直接読みたい時の明示的な抜け道。line-level citation が契約。
 - **Direct Citations** — topic ページに wiki-link と raw-file link を並べて置き、thesis の検証を 1 hop で済ませる。
 

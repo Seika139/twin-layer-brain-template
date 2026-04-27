@@ -12,24 +12,8 @@ pnpm = "latest"
 shfmt = "latest"
 rumdl = "latest"
 
-# --- Template / brain lifecycle --------------------------------------------
-
-[tasks.scaffold-brain]
-description = "Empty inherited template content so a freshly cloned brain starts blank (refuses to run inside twin-layer-brain-template itself)"
-usage = "cd ~/programs/brains/twin-layer-brain-<topic> && mise run scaffold-brain"
-file = "mise/tasks/scaffold-brain.sh"
-
-[tasks.clone-repo]
-description = "Clone a GitHub repo into raw/repos/ for ingest"
-usage = "mise run clone-repo <owner>/<repo> [branch]"
-file = "mise/tasks/clone-repo.sh"
-
-[tasks.update-repos]
-description = "git pull every repo under raw/repos/"
-file = "mise/tasks/update-repos.sh"
-
 [tasks.init]
-description = "Initialize a freshly scaffolded brain: ensure dirs exist, install deps, build index"
+description = "brain instance の初期化（ディレクトリ作成、依存同期、index 作成）"
 run = """
 mkdir -p raw/notes raw/articles raw/assets wiki/sources wiki/entities wiki/concepts wiki/topics wiki/analyses index
 test -d mise/tasks && chmod +x mise/tasks/*.sh
@@ -41,80 +25,23 @@ uv run kc index
 # --- Layer 1 (SQLite) CLI --------------------------------------------------
 
 [tasks.check-keys]
-description = "Check availability of LLM API keys (OpenAI / Gemini / Anthropic)"
-run = "uv run kc check-keys"
+description = "LLM API key と embedding 設定状態を確認する（引数: --json, --color）"
+quiet = true
+run = 'uv run kc check-keys "$@"'
+
+[tasks."check-keys-live"]
+description = "LLM API key と embedding 実生成 probe を確認する（API 使用あり、引数: --json, --color）"
+quiet = true
+run = 'uv run kc check-keys --live-embedding "$@"'
 
 # --- Layer 1 server (FastAPI + MCP) ----------------------------------------
 
 [tasks.serve]
-description = "Start the HTTP server in foreground (dev use)"
+description = "HTTP server を foreground で起動する（開発用）"
 run = "uv run python -m server.run"
-
-[tasks."serve:install"]
-description = "Install launchd plist for auto-start on login (macOS)"
-run = """
-set -e
-BRAIN_ROOT="$(pwd)"
-BRAIN_LABEL="local.$(basename "$BRAIN_ROOT")"
-PLIST_OUT="$HOME/Library/LaunchAgents/${BRAIN_LABEL}.plist"
-sed -e "s|%BRAIN_LABEL%|${BRAIN_LABEL}|g" \
-    -e "s|%BRAIN_ROOT%|${BRAIN_ROOT}|g" \
-    deploy/local.brain.plist > "$PLIST_OUT"
-launchctl load "$PLIST_OUT"
-echo "Installed $PLIST_OUT"
-"""
-
-[tasks."serve:uninstall"]
-description = "Remove launchd plist"
-run = """
-BRAIN_LABEL="local.$(basename "$(pwd)")"
-PLIST_OUT="$HOME/Library/LaunchAgents/${BRAIN_LABEL}.plist"
-launchctl unload "$PLIST_OUT" 2>/dev/null || true
-rm -f "$PLIST_OUT"
-echo "Uninstalled $PLIST_OUT"
-"""
-
-[tasks."serve:restart"]
-description = "Restart the local HTTP server"
-run = """
-BRAIN_LABEL="local.$(basename "$(pwd)")"
-launchctl kickstart -k "gui/$(id -u)/${BRAIN_LABEL}"
-"""
-
-[tasks."serve:status"]
-description = "Check if the local HTTP server is running"
-run = """
-BRAIN_LABEL="local.$(basename "$(pwd)")"
-PORT="${BRAIN_PORT:-15200}"
-launchctl print "gui/$(id -u)/${BRAIN_LABEL}" 2>/dev/null \
-  && curl -sf "http://localhost:${PORT}/api/health" && echo "" \
-  || echo "not running"
-"""
 
 # --- Python ----------------------------------------------------------------
 
 [tasks.test]
-description = "Run the Python test suite"
+description = "Python test suite を実行する"
 run = "uv run pytest"
-
-# --- Lint ------------------------------------------------------------------
-
-[tasks.lint]
-description = "Run both linters (rumdl + markdownlint-cli2) on all tracked markdown"
-run = """
-set -e
-echo '=== rumdl ==='
-rumdl check .
-echo '=== markdownlint-cli2 ==='
-markdownlint-cli2
-"""
-
-[tasks.lint-fix]
-description = "Auto-fix what the linters can fix (rumdl --fix, markdownlint-cli2 --fix)"
-run = """
-set -e
-echo '=== rumdl --fix ==='
-rumdl check --fix .
-echo '=== markdownlint-cli2 --fix ==='
-markdownlint-cli2 --fix '**/*.md'
-"""
