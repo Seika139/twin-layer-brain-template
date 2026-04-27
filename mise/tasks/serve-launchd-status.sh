@@ -61,14 +61,22 @@ printf 'runs      : %s\n' "${runs:-0}"
 printf 'last exit : %s\n' "${last_exit:-(none)}"
 printf 'port      : %s\n' "$PORT"
 
-printf 'health    : '
 if curl -sf -m 2 "http://localhost:${PORT}/api/health" >/dev/null; then
-  echo "200 OK"
+  health_ok=1
+  health_msg="200 OK"
 else
-  echo "(no response on :${PORT})"
+  health_ok=0
+  health_msg="(no response on :${PORT})"
 fi
+printf 'health    : %s\n' "$health_msg"
 
 if [[ "$verbose" != "1" ]]; then
   echo ""
   echo "詳細を見る場合: mise run serve-status -v"
+fi
+
+# Exit non-zero so this task can act as a readiness/health gate when invoked
+# from scripts. Display logic above always runs for human diagnosis.
+if [[ "$state" != "running" || "$health_ok" != "1" ]]; then
+  exit 1
 fi

@@ -44,6 +44,8 @@ wrapper は実行時に OS を判定します。
 
 `serve-status` はデフォルトで state / pid / restarts / last exit / port / `/api/health` の要約のみ表示します。`launchctl print` や `systemctl status` の生出力を見たい場合は `mise run serve-status -v` (または `--verbose`) で切り替えられます。
 
+service が running / active かつ `/api/health` が 200 を返したときに exit 0、それ以外 (未登録 / failed / health 失敗) は non-zero で抜けるので、CI / readiness gate からも利用できます。
+
 | OS    | wrapper の内部処理       |
 | ----- | ------------------------ |
 | macOS | `serve-launchd-*` を実行 |
