@@ -170,6 +170,15 @@ def _find_existing_clip(
     if not article_dir.exists():
         return None
 
+    # Fast path: new clips are written as `{slug}-{url_hash}.md`, so a glob on
+    # the filename is enough — no frontmatter parse needed for the common case.
+    fast_match = next(article_dir.glob(f"*-{url_hash}.md"), None)
+    if fast_match is not None:
+        return fast_match
+
+    # Fallback for legacy files (no url_hash in filename) or for matching by
+    # canonicalised URL when only a different `source_url` / `canonical_url` /
+    # `sources` field is present.
     for path in sorted(article_dir.glob("*.md")):
         try:
             post = frontmatter.loads(path.read_text(encoding="utf-8"))
