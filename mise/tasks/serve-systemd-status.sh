@@ -41,15 +41,21 @@ if [[ "$verbose" == "1" ]]; then
   echo ""
 fi
 
-show_field() {
-  systemctl --user show "$SERVICE" -p "$1" --value 2>/dev/null
-}
-
-active_state="$(show_field ActiveState)"
-sub_state="$(show_field SubState)"
-main_pid="$(show_field MainPID)"
-n_restarts="$(show_field NRestarts)"
-exec_status="$(show_field ExecMainStatus)"
+active_state=""
+sub_state=""
+main_pid=""
+n_restarts=""
+exec_status=""
+while IFS='=' read -r key value; do
+  case "$key" in
+  ActiveState) active_state="$value" ;;
+  SubState) sub_state="$value" ;;
+  MainPID) main_pid="$value" ;;
+  NRestarts) n_restarts="$value" ;;
+  ExecMainStatus) exec_status="$value" ;;
+  esac
+done < <(systemctl --user show "$SERVICE" \
+  -p ActiveState -p SubState -p MainPID -p NRestarts -p ExecMainStatus 2>/dev/null)
 
 printf 'service   : %s\n' "$SERVICE"
 printf 'state     : %s/%s\n' "${active_state:-unknown}" "${sub_state:-unknown}"
