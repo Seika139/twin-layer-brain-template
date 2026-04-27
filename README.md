@@ -1,240 +1,234 @@
 # twin-layer-brain-template
 
-Template for personal Second Brain repos that combine two search layers:
-
-- **Layer 1 (SQLite)** — FTS5 + `sqlite-vec` embedding-based fast search, exposed via MCP, REST API, `kc` CLI, and a Chrome extension.
-- **Layer 2 (LLM graph)** — LLM-maintained interlinked Markdown wiki following [karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
-
-Both layers read from the same Markdown source of truth under `raw/` and `wiki/`. Layer 1 is a derived index (regenerable from Markdown via `kc index`); Layer 2 is where LLM-synthesized understanding compounds over time.
-
-This template derives from two upstream projects:
-
-- [`brain-accelerator_1`](https://github.com/Seika139/brain-accelerator) — template pattern, skill packages, wiki structure, Obsidian integration.
-- [`second-brain`](https://github.com/Seika139/second-brain) — Python FTS5 + embedding infra, MCP server, Chrome extension.
+`twin-layer-brain-template` は、作業領域やプロジェクトごとにコピーして使う個人用 Second Brain テンプレートです。1 つのコピーを 1 つのトピックに割り当て、`raw/` と `wiki/` の Markdown を正本として育てます。
 
 > **Scope of this brain:** <ここにこのブレインが扱う範囲を 1 行で書き換える>
 >
-> One brain = one topic. For a different topic, spin up another brain from this template (see below).
+> One brain = one topic. 別の作業領域やプロジェクトは、別コピーとして運用します。
 
-## Why two layers
+この repo には 2 つの役割があります。
 
-| | Layer 1 (SQLite) | Layer 2 (LLM wiki) |
-|---|---|---|
-| 得意 | 素早い検索、具体的な語の突合 | 既存知識の再解釈・統合、compound |
-| 書き込み | 自動（Markdown 変更で再索引） | LLM / 人間が Markdown を直接 |
-| 参照先 | 全 Markdown | `wiki/index.md` 起点のグラフ |
-| 典型用途 | 「X について何か書いたっけ」 | 「X と Y の関係を整理して」 |
+- **template repo**: コピー元。スキーマ、skill、ドキュメント、検索/API実装を保守する場所。
+- **brain instance**: template を PC 上の作業領域ごとにコピーしたもの。実際の知識を保存し、 `ingest` / `query` / `sublime` / `dive` / `lint` を運用する場所。
 
-Single-direction data flow: **writes happen on Markdown, SQL re-indexes automatically**. You never write to SQL directly.
+## 何を提供するか
 
-## Why one brain per topic
+| 層      | 実装                         | 主な用途                                  |
+| ------- | ---------------------------- | ----------------------------------------- |
+| Layer 1 | SQLite FTS5 + `sqlite-vec`   | 速い候補検索、CLI / REST / MCP からの参照 |
+| Layer 2 | LLM が保守する Markdown Wiki | 知識の統合、解釈、長期的な compound       |
 
-- **Dense wiki graph.** `[[wiki-link]]` density comes from keeping the ingested material within a single domain. Mixing unrelated topics produces two weak clusters, not one strong one.
-- **Physical confidentiality boundary.** Public wikis and private wikis live in different repositories. There is no in-repo `shared/` vs `local/` split to misjudge — publish / keep-private is decided at the repository level.
-- **Narrow schema.** Each brain can tune `CLAUDE.md` for its own vocabulary (microservice dependency graph vs personal knowledge management vs reading notes).
+正本は常に Markdown です。SQLite の `index/knowledge.db` は `raw/` と `wiki/` から作る
+派生物で、壊れても `uv run kc index` で再生成できます。
 
-## Spin up a new brain
+## ドキュメント
+
+README は全体の入口です。詳細は `docs/` に分けています。
+
+| ファイル                                                   | 内容                                          |
+| ---------------------------------------------------------- | --------------------------------------------- |
+| [docs/template-operation.md](docs/template-operation.md)   | template repo 自体の保守方法                  |
+| [docs/instance-setup.md](docs/instance-setup.md)           | コピー後の brain instance セットアップ        |
+| [docs/environment.md](docs/environment.md)                 | `.env` と環境変数の優先順位・用途・既定挙動   |
+| [docs/knowledge-ingest.md](docs/knowledge-ingest.md)       | ソース取得、ingest、再 ingest、Web clip       |
+| [docs/chrome-extension.md](docs/chrome-extension.md)       | Chrome extension からの Web clip              |
+| [docs/search.md](docs/search.md)                           | Layer 1 / Layer 2 の検索の流れ                |
+| [docs/http-api.md](docs/http-api.md)                       | HTTP server / REST API の起動・認証・endpoint |
+| [docs/server-management.md](docs/server-management.md)     | macOS / Linux の HTTP server 常駐運用         |
+| [docs/mcp.md](docs/mcp.md)                                 | MCP server の起動方法と tool                  |
+| [docs/wiki-operations.md](docs/wiki-operations.md)         | query / sublime / dive / lint / 手動編集      |
+| [docs/mise-tasks.md](docs/mise-tasks.md)                   | `mise` タスク一覧と使い分け                   |
+| [development/architecture.md](development/architecture.md) | アーキテクチャの設計思想                      |
+
+## コピーして使い始める
+
+ローカルコピーで作る場合:
 
 ```bash
-# 1. Create an instance from the template.
-#    (a) GitHub Template Repository route
-gh repo create Seika139/twin-layer-brain-<topic> --private \
-    --template=Seika139/twin-layer-brain-template
 mkdir -p ~/programs/brains
-git -C ~/programs/brains clone git@github.com:Seika139/twin-layer-brain-<topic>.git
+cp -r ~/programs/brains/twin-layer-brain-template \
+  ~/programs/brains/twin-layer-brain-<topic>
 cd ~/programs/brains/twin-layer-brain-<topic>
-#    (b) Or a local-only copy without GitHub
-cp -r ~/programs/brains/twin-layer-brain-template ~/programs/brains/twin-layer-brain-<topic>
-cd ~/programs/brains/twin-layer-brain-<topic>
-rm -rf .git && git init
+rm -rf .git
+git init
+```
 
-# 2. Install tools and dependencies.
+GitHub template repo から作る場合:
+
+```bash
+gh repo create <owner>/twin-layer-brain-<topic> --private \
+  --template=<owner>/twin-layer-brain-template
+git -C ~/programs/brains clone git@github.com:<owner>/twin-layer-brain-<topic>.git
+cd ~/programs/brains/twin-layer-brain-<topic>
+```
+
+コピー後の初期化:
+
+```bash
 mise install
 uv sync
 pnpm install
 
-# 3. Empty the inherited content and reset index.md / log.md to skeletons.
 mise run scaffold-brain
-
-# 4. Rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md to
-#    describe what this brain covers. Starting with a one-line scope keeps
-#    ingest decisions sharp ("does this source fit this brain?").
-
-# 5. Commit and push.
-git add -A
-git commit -m "ブレインの初期スコープを設定"
-git push   # if using the GitHub route
-
-# 6. (Optional) Build the initial index and start the server.
 mise run init
-mise run serve:install   # macOS launchd auto-start
-
-# 7. Drop the first source into raw/ (or `mise run clone-repo <owner>/<repo>`)
-#    and ingest it.
-cd ~/programs/brains/twin-layer-brain-<topic> && claude
-> ingest raw/notes/<source>
 ```
 
-`mise run scaffold-brain` refuses to run inside `twin-layer-brain-template` itself (the template). Override with `FORCE=1 mise run scaffold-brain` only if you really mean to nuke the template's own content.
+その後、`README.md` / `CLAUDE.md` / `AGENTS.md` の Scope 行を、その brain が扱う
+作業領域に合わせて書き換えます。
 
-## Layout
+詳しい手順は [docs/instance-setup.md](docs/instance-setup.md) を参照してください。
+
+## template repo を保守する
+
+この `twin-layer-brain-template` 自体には、プロジェクト固有の知識を入れません。
+template 側で変更する主なものは以下です。
+
+- `CLAUDE.md` / `AGENTS.md`: LLM agent の運用規約
+- `.agents/skills/`: ingest / query / lint / sublime / dive の skill
+- `compiler/`: Layer 1 の index / search / CLI
+- `server/`: REST API / MCP server
+- `docs/`: 人間向け運用ドキュメント
+- `mise.toml` / `mise/tasks/`: 定型タスク
+
+template repo では `mise run scaffold-brain` は通常実行しません。
+安全装置により拒否されます。
+意図的に template の中身を初期化する場合だけ `FORCE=1` を使います。
+
+詳しくは [docs/template-operation.md](docs/template-operation.md) を参照してください。
+
+## データフロー
+
+```text
+raw/ と wiki/ の Markdown (正本)
+        |
+        | uv run kc index / API 経由の rebuild
+        v
+index/knowledge.db (SQLite FTS5 + vec, 派生物)
+        |
+        | CLI / REST / MCP / query の候補検索
+        v
+LLM が wiki/index.md と関連 Markdown を読んで回答
+```
+
+書き込みは Markdown 側だけに行います。SQL へ直接知識を書き込む運用はしません。
+
+注意: API 経由の note 作成・更新、Web clip、GitHub webhook では `rebuild_index()` が呼ばれます。
+一方で、エディタや LLM が Markdown を直接編集した場合は、検索結果を最新にするために `uv run kc index` または `mise run init` を実行してください。
+
+## ディレクトリ構造
 
 ```text
 twin-layer-brain-<topic>/
-├── CLAUDE.md           # LLM schema (Claude Code)
-├── AGENTS.md           # Codex-facing schema companion
-├── GUIDE.md            # human operation manual
-├── README.md           # you are here
-├── mise.toml           # task runner (`mise run ...`)
-├── pyproject.toml      # Python deps and `kc` CLI entry point
-├── package.json        # Node deps (Chrome extension etc.)
-├── .agents/skills/     # source-of-truth skill packages for both LLM agents
-├── .claude/skills/     # mirror of .agents/skills for Claude Code
-├── compiler/           # Python package: FTS5 + embedding + `kc` CLI
-├── server/             # FastAPI + MCP server
-├── deploy/             # systemd unit, Caddyfile, launchd plist, setup.sh
-├── raw/                # source material (Layer 2 input)
-│   ├── notes/          # user-written notes (immutable — LLM never edits)
-│   ├── articles/       # web clippings, PDFs
-│   ├── assets/         # images, diagrams
-│   └── repos/          # cloned source repos (gitignored — nested .git)
-├── wiki/               # LLM-owned pages (Layer 2 output)
-│   ├── index.md        # catalog — start here
-│   ├── log.md          # append-only activity log
-│   ├── sources/        # one page per ingested source
-│   ├── entities/       # concrete things (people, services, tools)
-│   ├── concepts/       # abstract things (patterns, workflows)
-│   ├── topics/         # cross-cutting permanent theses (sublime output)
-│   └── analyses/       # query snapshots (gitignored by default)
-└── index/              # SQLite DB (Layer 1, gitignored — regenerable)
+├── README.md
+├── CLAUDE.md
+├── AGENTS.md
+├── docs/
+├── development/
+├── .agents/skills/
+├── compiler/
+├── server/
+├── deploy/
+├── mise.toml
+├── raw/
+│   ├── notes/
+│   ├── articles/
+│   ├── assets/
+│   └── repos/          # gitignored
+├── wiki/
+│   ├── index.md
+│   ├── log.md
+│   ├── sources/
+│   ├── entities/
+│   ├── concepts/
+│   ├── topics/
+│   └── analyses/       # gitignored by default
+└── index/              # gitignored, regenerable
 ```
 
-Public/private is a repository-level decision. The default `.gitignore` only carves out paths that either can't be tracked (`raw/repos/` — nested `.git`, large, reproducible) or are best kept out of public history regardless of the brain's status (`wiki/analyses/` — snapshots, private introspection). If the repo is private and you want analyses versioned, delete the `/wiki/analyses/*` line from `.gitignore`.
-
-## Usage
-
-### Layer 1 — fast search (`kc` CLI, MCP, REST)
+## よく使うコマンド
 
 ```bash
-# CLI
-uv run kc new "タイトル"                # create a new note skeleton
-uv run kc index                         # rebuild SQLite index from Markdown
-uv run kc search "Docker"               # FTS keyword search
-uv run kc suggest-related note-id       # semantic neighbours (needs OPENAI_API_KEY)
-uv run kc check-keys                    # diagnose LLM API key availability
+mise tasks                 # タスク一覧
+mise run init              # 依存を同期し、SQLite index を作る
+mise run clone-repo owner/repo
+mise run update-repos
+mise run reset-token      # BRAIN_API_TOKEN を .env に作成・更新
+mise run check-keys       # API key 状態確認（embedding 実生成はしない）
+mise run check-keys --json
+mise run check-keys --color
+mise run check-keys-live  # embedding 実生成 probe（原因切り分け時のみ）
+mise run serve
+mise run serve-install    # 常駐 service 登録（macOS: launchd / Linux: systemd --user）
+mise run serve-status
+mise run serve-logs
+mise run test
+mise run lint             # Markdown のみ
+mise run lint --all       # Markdown + ruff + shfmt
+mise run format           # Markdown のみ
+mise run format --all     # Markdown + ruff + shfmt
 
-# mise shortcuts
-mise run check-keys
-mise run serve                          # foreground (dev)
-mise run serve:install                  # launchd auto-start (macOS)
+uv run kc index
+uv run kc search "Docker"
+uv run kc show <id-or-path>
+uv run kc suggest-related <note-id>
 ```
 
-`OPENAI_API_KEY` (or Gemini / Anthropic / Ollama as configured) enables embedding-based semantic search. FTS5 keyword search works without any key.
+各タスクの意味は [docs/mise-tasks.md](docs/mise-tasks.md) にまとめています。
 
-REST endpoints (see `server/routes/`):
+## 知識を入れて検索する
 
-```text
-GET  /api/notes/search?q=keyword     # FTS search
-GET  /api/notes/similar?q=文章       # semantic search
-GET  /api/notes/{id}                 # read a note
-POST /api/notes                      # create
-POST /api/sync/webhook               # GitHub webhook re-index trigger
-GET  /api/health                     # liveness
-```
+1. `raw/notes/`, `raw/articles/`, `raw/repos/` にソースを置く。
+2. Claude Code / Codex で `ingest raw/...` を実行する。
+3. LLM が `wiki/sources/` を作り、関連する `entities/` / `concepts/` / `topics/`
+   を更新する。
+4. `uv run kc index` で Layer 1 の検索 index を更新する。
+5. 検索は `kc search` / REST / MCP / 通常の `query` で行う。
 
-### Layer 2 — read the wiki
+Layer 1 は「読むべき Markdown 候補を絞る」ための補助です。最終的な回答は
+Layer 2 の `wiki/index.md` と関連 Markdown を読んで作ります。
 
-- Start at `wiki/index.md`. Links use Foam/Obsidian `[[wiki-link]]` syntax — VS Code with the Foam extension (or Obsidian) resolves them.
-- Mermaid diagrams render in VS Code preview (`bierner.markdown-mermaid`) and natively in Obsidian.
+詳細:
 
-### Open the repo as an Obsidian vault (optional)
+- [docs/knowledge-ingest.md](docs/knowledge-ingest.md)
+- [docs/search.md](docs/search.md)
+- [docs/wiki-operations.md](docs/wiki-operations.md)
 
-VS Code + Foam and Obsidian share the same `[[wiki-link]]` + YAML-frontmatter format, so either works. Shared Obsidian settings live in `.obsidian/{app,core-plugins,community-plugins}.json` (tracked); per-machine workspace state (`workspace.json`, installed plugin binaries, hotkeys) is gitignored.
+## API とサーバー
 
-1. Open the repo root as an Obsidian vault.
-2. Obsidian will read `.obsidian/app.json` and honour the tracked link/attachment policy (`newLinkFormat: relative`, `attachmentFolderPath: raw/assets`, `useMarkdownLinks: false`).
-3. On first open, Obsidian will list the community plugins declared in `.obsidian/community-plugins.json`. Install them from Community plugins → Browse:
-   - **Dataview** — frontmatter queries over `wiki/`. Example: `TABLE created, updated FROM "wiki/topics"` renders a live topic index.
-   - **PDF Plus** — improved PDF reading inside `raw/articles/`.
-   - **Extract PDF Highlights** — turn PDF highlights into markdown for `raw/notes/` ingest.
-4. Keep the core Obsidian Linter **disabled** — the repo uses `rumdl` (auto-run on edit via the Claude Code `PostToolUse` hook) and `markdownlint-cli2`. Running Obsidian Linter in parallel causes format thrash.
-
-The wiki is fully readable without any plugin; the list above is the authors' recommendation, not a requirement.
-
-### Read on mobile (iOS / Android)
-
-The `.obsidian/*.json` shared settings work on mobile Obsidian unchanged — `[[wiki-link]]` resolution, graph view, backlinks, tag pane, Dataview, and PDF Plus all run. **Extract PDF Highlights is desktop-only** and will be skipped silently on mobile; that's expected.
-
-**Sync path: Git/GitHub.** Mobile Obsidian has no built-in git, so the vault lives in a git client that Obsidian reads from via iOS Files.app or Android's filesystem. This aligns with the repo's git-is-source-of-truth design and doesn't require paid Obsidian Sync.
-
-| Platform | Recommended flow |
-|---|---|
-| iOS | **Working Copy** (App Store) — clone the repo into Working Copy, enable File Provider so Obsidian can open the vault via Files.app. Manual `pull` / `commit` / `push` in Working Copy before and after editing. |
-| Android | **Obsidian Git** community plugin (not in the Tier 1 list by default — opt in if needed) clones directly into the vault. Slower on large repos but avoids a separate app. |
-
-Caveats of the mobile flow:
-
-- **LLM operations (`ingest`, `query`, `sublime`, `dive`, `lint`) and Layer 1 indexing are desktop-only.** Claude Code / Codex / `mise` / Python / Node do not run on mobile; mobile use is read-first, with light frontmatter edits and ad-hoc additions to `raw/notes/` at most.
-- **`raw/repos/` is gitignored** and will not sync to mobile. Cloned source repos only exist on the desktop that ran `mise run clone-repo`.
-- **Commit from mobile sparingly.** Always pull first. If you push mobile edits, run `mise run lint` on desktop before the next ingest so markdown format stays consistent.
-- **macOS/iOS AppleDouble files** (`._foo`) can leak into the repo if the vault moves across SMB / iCloud / exFAT. `.gitignore` blocks them, but check with `git status` after syncing.
-
-### Ingest a source
+開発時は foreground で起動します。
 
 ```bash
-# Put the source somewhere under raw/:
-#   - user-owned notes → raw/notes/
-#   - cloned repos     → raw/repos/  (use `mise run clone-repo`)
-#   - clippings, PDFs  → raw/articles/
-#   - images           → raw/assets/
-mise run clone-repo <owner>/<repo>     # clones into raw/repos/<repo>
-
-# Then in Claude Code or Codex:
-> ingest raw/repos/<repo>
+mise run serve
 ```
 
-The agent reads the source, writes / updates pages under `wiki/`, updates `wiki/index.md`, and appends to `wiki/log.md`. Layer 1 is re-indexed automatically after the write (incremental).
-
-### Ask a question (Query)
-
-Open the repo in Claude Code / Codex and ask. The agent uses both layers:
-
-1. Layer 1 (`search_notes` / `search_similar` via MCP) to shortlist candidate pages.
-2. Layer 2 (`wiki/index.md` → relevant pages → `[[wiki-link]]` neighbours) to synthesize an answer with citations.
-
-If the answer is worth keeping, the agent either files it as an analysis (`wiki/analyses/<slug>.md`, gitignored by default) or promotes it to canonical (`wiki/topics/`, `wiki/concepts/`, or `wiki/entities/`).
-
-### Sublime — promote scattered knowledge into a canonical topic
+主な endpoint:
 
 ```text
-> sublime the analysis about rag-vs-wiki into a topic
+GET  /api/health
+GET  /api/auth/check
+GET  /api/notes/search?q=keyword
+GET  /api/notes/similar?q=文章
+GET  /api/notes/{id}
+POST /api/notes
+POST /api/clip
+POST /api/sync/webhook
 ```
 
-The agent lifts recurring claims or valuable analyses into `wiki/topics/<slug>.md` with a Core thesis and Direct Citations (wiki-links + raw-file links side by side), routes the index entry point to the new canonical page, and demotes the analysis to derivation history. Run this when a snapshot analysis has proven its worth, or when the same claim keeps appearing across 3+ pages.
+`/api/notes/*`、`/api/index/*`、`/api/clip` は `BRAIN_API_TOKEN` の Bearer token を使います。
+`mise run reset-token` で `.env` に token を作成・更新できます。更新した場合は、起動中の server を再起動し、
+Chrome extension 側の token 設定も同じ値に更新してください。
+環境変数の優先順位と既定挙動は [docs/environment.md](docs/environment.md) にまとめています。
 
-### Dive — deep-read `raw/` when the wiki is insufficient
+常駐 service として登録したい場合は `mise run serve-install` を使います。
+macOS では launchd、Linux / WSL では systemd --user を使います。
+VPS で root 管理の system service として運用する場合は `deploy/setup.sh` と
+`deploy/brain.service` を使います。
 
-```text
-> dive into raw/repos/framework to trace how retry-on-conflict is decided
-> /dive raw/articles/2026-04-20-rfc-draft.md の error handling 提案を詳しく
-```
+HTTP API の詳細は [docs/http-api.md](docs/http-api.md)、MCP の詳細は
+[docs/mcp.md](docs/mcp.md) を参照してください。
 
-Exception lane to the wiki-first principle. Use when you already know the wiki summary isn't enough — for instance, a recently updated `raw/repos/<repo>/` with changes not yet re-ingested, or an implementation-level question that needs line-by-line citations. The agent confirms the focus, does a 60-second wiki scan to avoid rediscovering known facts, reads `raw/` hierarchically, and cites every claim with `file:line` markdown links. Results default to `wiki/analyses/` as a gitignored snapshot; a source page is updated only after you confirm a permanent fact.
+## このテンプレートの非目的
 
-### Lint the wiki
-
-```text
-> lint the wiki
-```
-
-Produces five fixed sections: auto-fixable / needs review / missing pages / unsourced claims / follow-up questions. No auto-fix — changes go through review.
-
-See **`GUIDE.md`** for the long-form human operation manual with step-by-step scenarios.
-
-## Why not a chatbot with RAG?
-
-RAG re-retrieves sources on every query. This wiki **compounds** — prior synthesis is persistent, cross-referenced, and read before answering, so the system gets smarter over time. The persistence is the crux (karpathy's framing). Layer 1's fast search accelerates the retrieval step; Layer 2 is where the compounding happens.
-
-## Not for
-
-- **Topics outside this brain's Scope.** Spin up another repo instead. Keep the `[[wiki-link]]` graph dense and the confidentiality boundary clean.
+- 複数トピックを 1 repo に混ぜること。別の作業領域は別コピーにします。
+- SQLite を正本にすること。SQLite は常に Markdown から再生成します。
+- `raw/repos/` の全コードを常時 index すること。大きな repo は `ingest` / `dive` の対象であり、通常の Layer 1 index からは外します。

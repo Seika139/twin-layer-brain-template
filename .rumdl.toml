@@ -27,12 +27,14 @@ disable = [
 # it explicit so intent is readable.
 respect_gitignore = true
 
-# Skip cloned source repos, scratch tmp/, and Serena's local state.
+# Skip cloned source repos, web-clipped articles, scratch tmp/, and Serena's local state.
 # `.gitignore` already excludes these paths and respect-gitignore would
 # catch part of it, but listing them here makes the intent obvious when
 # someone reads just this file.
 exclude = [
   "raw/repos/**",
+  "raw/articles/**",
+  "node_modules/**",
   "tmp/**",
   ".serena/**",
 ]

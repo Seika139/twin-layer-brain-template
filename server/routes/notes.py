@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from compiler.config import BASE_DIR
+from compiler.paths import BASE_DIR
 from compiler.frontmatter import create_note_file, parse_note
 from compiler.indexer import ensure_db, rebuild_index
 from compiler.models import Note

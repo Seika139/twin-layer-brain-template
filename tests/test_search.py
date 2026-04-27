@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-import pytest
+import sqlite3
 
+import pytest
+import sqlite_vec
+
+from compiler import search
 from compiler.search import _normalize_fts_query
 
 
@@ -56,3 +60,73 @@ from compiler.search import _normalize_fts_query
 )
 def test_normalize_fts_query(query: str, expected: str) -> None:
     assert _normalize_fts_query(query) == expected
+
+
+def _make_vec_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(":memory:")
+    conn.enable_load_extension(True)
+    sqlite_vec.load(conn)
+    conn.enable_load_extension(False)
+    conn.executescript("""
+        CREATE TABLE notes (
+            path TEXT PRIMARY KEY,
+            note_id TEXT,
+            title TEXT,
+            kind TEXT,
+            tags TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            body_text TEXT,
+            raw_markdown TEXT
+        );
+        CREATE VIRTUAL TABLE notes_vec USING vec0(
+            note_id TEXT PRIMARY KEY,
+            embedding FLOAT[3]
+        );
+    """)
+    rows = [
+        ("a.md", "a", "Alpha", "note", '["x"]', "Alpha body", [1.0, 0.0, 0.0]),
+        ("b.md", "b", "Beta", "note", '["y"]', "Beta body", [0.0, 1.0, 0.0]),
+        ("c.md", "c", "Gamma", "note", "[]", "Gamma body", [0.0, 0.0, 1.0]),
+    ]
+    for path, note_id, title, kind, tags, body, vec in rows:
+        conn.execute(
+            """
+            INSERT INTO notes
+            (path, note_id, title, kind, tags, body_text, raw_markdown)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (path, note_id, title, kind, tags, body, body),
+        )
+        conn.execute(
+            "INSERT INTO notes_vec (note_id, embedding) VALUES (?, ?)",
+            (note_id, sqlite_vec.serialize_float32(vec)),
+        )
+    return conn
+
+
+def test_search_similar_uses_sqlite_vec_k_constraint(monkeypatch) -> None:
+    conn = _make_vec_db()
+    monkeypatch.setattr(search, "ensure_db", lambda: conn)
+    monkeypatch.setattr(search, "is_embedding_available", lambda: True)
+    monkeypatch.setattr(
+        search,
+        "generate_embedding",
+        lambda query: sqlite_vec.serialize_float32([1.0, 0.0, 0.0]),
+    )
+
+    results = search.search_similar("alpha", limit=2)
+
+    assert results[0][0].note_id == "a"
+    assert {note.note_id for note, _distance in results} <= {"a", "b", "c"}
+    assert len(results) == 2
+
+
+def test_suggest_related_uses_sqlite_vec_k_constraint(monkeypatch) -> None:
+    conn = _make_vec_db()
+    monkeypatch.setattr(search, "ensure_db", lambda: conn)
+    monkeypatch.setattr(search, "is_embedding_available", lambda: True)
+
+    results = search.suggest_related("a", limit=2)
+
+    assert {note.note_id for note, _distance in results} == {"b", "c"}

@@ -61,8 +61,8 @@ def search_similar(query: str, limit: int = 10) -> list[tuple[Note, float]]:
         FROM notes_vec v
         JOIN notes n ON n.note_id = v.note_id
         WHERE v.embedding MATCH ?
+          AND k = ?
         ORDER BY v.distance
-        LIMIT ?
         """,
         (vec, limit),
     ).fetchall()
@@ -101,6 +101,8 @@ def suggest_related(note_id: str, limit: int = 5) -> list[tuple[Note, float]]:
         return []
 
     target_vec = row[0]
+    # Ask sqlite-vec for one extra candidate because we filter out the source note.
+    k = limit + 1
     rows = conn.execute(
         """
         SELECT v.note_id, v.distance,
@@ -109,11 +111,11 @@ def suggest_related(note_id: str, limit: int = 5) -> list[tuple[Note, float]]:
         FROM notes_vec v
         JOIN notes n ON n.note_id = v.note_id
         WHERE v.embedding MATCH ?
+          AND k = ?
           AND v.note_id != ?
         ORDER BY v.distance
-        LIMIT ?
         """,
-        (target_vec, note_id, limit),
+        (target_vec, k, note_id),
     ).fetchall()
     conn.close()
 

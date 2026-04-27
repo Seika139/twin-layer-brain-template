@@ -9,7 +9,7 @@
     - %BRAIN_LABEL% : unique launchd label, e.g. local.twin-layer-brain-personal
     - %BRAIN_ROOT% : absolute repo path, e.g. /Users/<you>/programs/brains/twin-layer-brain-personal
 
-  The `mise run serve:install` task does this substitution automatically.
+  The `mise run serve-install` and `mise run serve-launchd-install` tasks do this substitution automatically.
 -->
 <dict>
   <key>Label</key>

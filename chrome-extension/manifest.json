@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Twin Layer Brain Clipper",
+  "version": "0.1.0",
+  "description": "Clip local browser pages into a twin-layer brain instance",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icon48.png"
+    }
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"]
+}

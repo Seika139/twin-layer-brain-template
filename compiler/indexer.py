@@ -5,7 +5,8 @@ import sqlite3
 
 import sqlite_vec
 
-from compiler.config import BASE_DIR, CONTENT_DIRS, DB_PATH, INDEX_DIR
+from compiler.config import CONTENT_DIRS
+from compiler.paths import BASE_DIR, DB_PATH, INDEX_DIR
 from compiler.embedding import generate_embedding, is_embedding_available
 from compiler.frontmatter import parse_note
 from compiler.models import Note

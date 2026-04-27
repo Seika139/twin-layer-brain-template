@@ -6,7 +6,7 @@ from compiler.paths import BASE_DIR
 
 
 def load_dotenv() -> None:
-    """Load repo-root .env into os.environ with setdefault semantics.
+    """Load repo-root .env into os.environ, preferring repo-local values.
 
     Shared by `server/run.py` (HTTP server) and `compiler/cli.py` (kc CLI)
     so both see the same keys.
@@ -20,4 +20,4 @@ def load_dotenv() -> None:
             continue
         key, _, value = line.partition("=")
         if key and value:
-            os.environ.setdefault(key.strip(), value.strip())
+            os.environ[key.strip()] = value.strip()
