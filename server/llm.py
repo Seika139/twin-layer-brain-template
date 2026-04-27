@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import httpx
 
-from compiler.config import INDEX_DIR
+from compiler.paths import INDEX_DIR
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 

@@ -13,7 +13,7 @@ import frontmatter
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from compiler.config import BASE_DIR
+from compiler.paths import BASE_DIR
 from compiler.frontmatter import parse_note, write_note_file
 from compiler.indexer import rebuild_index
 from server.auth import require_token

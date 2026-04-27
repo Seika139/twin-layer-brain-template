@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from compiler.config import BASE_DIR
+from compiler.paths import BASE_DIR
 from compiler.env import load_dotenv
 from compiler.key_check import KeyStatus
 
@@ -175,8 +175,8 @@ def _cmd_check_keys(args: argparse.Namespace) -> None:
     import asyncio
     import json
 
-    from compiler.config import INDEX_DIR
     from compiler.key_check import check_all_keys, check_embedding
+    from compiler.paths import INDEX_DIR
 
     def _skipped_embedding_status(openai_status: KeyStatus | None) -> KeyStatus:
         if openai_status is None or openai_status.status == "NONE":

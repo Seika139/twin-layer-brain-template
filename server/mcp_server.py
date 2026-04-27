@@ -4,7 +4,7 @@ import json
 
 from mcp.server.fastmcp import FastMCP
 
-from compiler.config import BASE_DIR
+from compiler.paths import BASE_DIR
 from compiler.frontmatter import create_note_file, parse_note
 from compiler.indexer import rebuild_index as _rebuild_index
 from compiler.models import Note
