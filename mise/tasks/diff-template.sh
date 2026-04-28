@@ -152,9 +152,11 @@ EOF
   exit 2
 fi
 
-echo "[fetch] $REMOTE_NAME/$REMOTE_BRANCH を取得中..."
+print_blue "[fetch] "
+echo "$REMOTE_NAME/$REMOTE_BRANCH を取得中..."
 if ! git fetch --quiet "$REMOTE_NAME" "$REMOTE_BRANCH"; then
-  echo "[error] $REMOTE_NAME/$REMOTE_BRANCH の fetch に失敗しました" >&2
+  print_red "[error] " >&2
+  print_orange "$REMOTE_NAME/$REMOTE_BRANCH の fetch に失敗しました" >&2
   exit 2
 fi
 
@@ -175,6 +177,11 @@ INSTANCE_PATHSPEC=(
   ':(exclude)index/**'
   ':(exclude)repos.json'
   ':(exclude).env'
+  ':(exclude)pyproject.toml'
+  ':(exclude)uv.lock'
+  ':(exclude)AGENTS.md'
+  ':(exclude)CLAUDE.md'
+  ':(exclude)README.md'
 )
 
 PATHSPEC=()
@@ -183,7 +190,7 @@ if [[ "$INCLUDE_INSTANCE" -eq 0 ]]; then
 fi
 
 echo ""
-print_blue "=== diff-template ($BASE_REF..$HEAD_REF) ==="
+print_blue "=== diff-template ($BASE_REF..$HEAD_REF) ==="$'\n'
 if [[ "$INCLUDE_INSTANCE" -eq 0 ]]; then
   echo "(instance 固有 path は除外。--all で含める)"
 fi
@@ -207,22 +214,22 @@ print_list() {
   renamed=$(echo "$changed" | awk '$1 ~ /^R/{print $2" -> "$3}')
 
   if [[ -n "$added" ]]; then
-    print_blue "追加 (instance のみ存在 / 適用時は保護されスキップ):"
+    print_blue "追加 (instance のみ存在 / 適用時は保護されスキップ):"$'\n'
     echo "$added" | sed 's/^/  /'
     echo ""
   fi
   if [[ -n "$modified" ]]; then
-    print_blue "変更 (両方にあり内容が異なる / 適用時は template で上書き):"
+    print_blue "変更 (両方にあり内容が異なる / 適用時は template で上書き):"$'\n'
     echo "$modified" | sed 's/^/  /'
     echo ""
   fi
   if [[ -n "$deleted" ]]; then
-    print_blue "削除 (template のみ存在 = instance で削除済み / 適用時は template から復元):"
+    print_blue "削除 (template のみ存在 = instance で削除済み / 適用時は template から復元):"$'\n'
     echo "$deleted" | sed 's/^/  /'
     echo ""
   fi
   if [[ -n "$renamed" ]]; then
-    print_blue "リネーム:"
+    print_blue "リネーム:"$'\n'
     echo "$renamed" | sed 's/^/  /'
     echo ""
   fi
@@ -237,8 +244,8 @@ list)
   fi
   print_list "$CHANGED_FILES"
 
+  print_blue "次のステップ:"$'\n'
   cat <<EOF
-次のステップ:
   mise run diff-template --diff      # 差分の中身を確認する
   mise run diff-template --apply     # 確認を取って一括上書きする
   git checkout $BASE_REF -- <path>   # 個別に template 側の内容で上書きする
@@ -254,11 +261,16 @@ apply)
     exit 0
   fi
 
-  # 適用対象 (M + D) と保護対象 (A) を分離する。
+  # 適用対象 (M + D)、保護対象 (A)、手動対象 (R) を分離する。
+  # R は rename 検出ヒューリスティックで出るため、どちらの側が rename したかを
+  # 機械的に判別できない（template が改名したのか instance が改名したのか不明）。
+  # 自動 apply は事故源になりうるので一覧で警告し、人間に判断を委ねる。
   to_overwrite=()
-  while IFS=$'\t' read -r status path _rest; do
+  to_skip_rename=()
+  while IFS=$'\t' read -r status path rest; do
     case "$status" in
     M | D) to_overwrite+=("$path") ;;
+    R*) to_skip_rename+=("$path"$'\t'"$rest") ;;
     esac
   done <<<"$CHANGED_FILES"
 
@@ -267,7 +279,47 @@ apply)
 
   if [[ ${#to_overwrite[@]} -eq 0 ]]; then
     print_blue "適用対象の変更 (M / D) はありません。A (instance のみ存在) は保護されます。"
+    if [[ ${#to_skip_rename[@]} -gt 0 ]]; then
+      echo ""
+      print_orange "rename は自動 apply 対象外です。必要に応じて手動で取り込んでください:"$'\n'
+      for entry in "${to_skip_rename[@]}"; do
+        IFS=$'\t' read -r tmpl_path inst_path <<<"$entry"
+        echo "  $tmpl_path -> $inst_path"
+        echo "    git rm -- '$inst_path'"
+        echo "    git checkout $BASE_REF -- '$tmpl_path'"
+      done
+    fi
     exit 0
+  fi
+
+  # 上書き対象 path に未コミットの変更があると `git checkout` で静かに失われる。
+  # working tree の編集は reflog に残らず復旧手段が無いため、apply 前にブロックする。
+  dirty=()
+  for path in "${to_overwrite[@]}"; do
+    if ! git diff --quiet -- "$path" 2>/dev/null ||
+      ! git diff --cached --quiet -- "$path" 2>/dev/null; then
+      dirty+=("$path")
+    fi
+  done
+
+  if [[ ${#dirty[@]} -gt 0 ]]; then
+    print_red "[error] " >&2
+    print_orange "上書き対象に未コミットの変更があります。失われる前に中断します:"$'\n' >&2
+    for path in "${dirty[@]}"; do
+      echo "  $path" >&2
+    done
+    cat >&2 <<'EOF'
+
+未コミットの working tree 編集は git checkout -- <path> で消えると reflog では復旧できません。
+事前に対処してから再実行してください:
+
+  git stash push -- <path>...     # 退避してから apply、後で git stash pop
+  git add <path> && git commit    # コミット済みにすれば reflog で復旧可能
+  git checkout -- <path>          # WIP を捨てる (要確認)
+
+それから再度 mise run diff-template --apply を実行してください。
+EOF
+    exit 2
   fi
 
   # 差分の中身を全部見せる (--yes の時は省略)。ユーザーが独自変更に気付く導線。
@@ -276,7 +328,7 @@ apply)
     echo ""
     git --no-pager diff "$BASE_REF".."$HEAD_REF" -- "${to_overwrite[@]}"
     echo ""
-    print_blue "独自に編集したファイルがある場合、その変更は失われます (git reflog で復旧可能)。"
+    print_blue "コミット済みの独自編集は git reflog で復旧可能ですが、未コミットの WIP は復旧できません。"
     echo ""
 
     if ! is_tty; then
@@ -316,6 +368,17 @@ EOF
     print_red "[warn] ${#failed[@]} 件の適用に失敗しました。手動で確認してください。"
   else
     print_blue "${#to_overwrite[@]} 件を適用しました。"
+  fi
+
+  if [[ ${#to_skip_rename[@]} -gt 0 ]]; then
+    echo ""
+    print_orange "[skip] rename ${#to_skip_rename[@]} 件は自動 apply 対象外です。必要なら以下を手動で実行してください:"$'\n'
+    for entry in "${to_skip_rename[@]}"; do
+      IFS=$'\t' read -r tmpl_path inst_path <<<"$entry"
+      echo "  $tmpl_path -> $inst_path"
+      echo "    git rm -- '$inst_path'"
+      echo "    git checkout $BASE_REF -- '$tmpl_path'"
+    done
   fi
 
   cat <<'EOF'
