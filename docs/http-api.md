@@ -51,8 +51,7 @@ sudo systemctl status brain
 
 macOS / Linux の詳しい常駐運用は [server-management.md](server-management.md) を参照してください。
 
-複数 instance を同じ Linux host に置く場合は、`SERVICE_NAME` と `.env` の `BRAIN_PORT` を
-instance ごとに分けます。
+複数 instance を同じ Linux host に置く場合は、`SERVICE_NAME` と `.env` の `BRAIN_PORT` を instance ごとに分けます。
 
 ```bash
 sudo SERVICE_NAME=brain-project-a ./deploy/setup.sh /opt/brain-project-a
@@ -65,25 +64,24 @@ sudo systemctl restart brain-project-a
 必要です。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/notes/search?q=Docker"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/notes/search?q=Docker"
 ```
 
 `BRAIN_API_TOKEN` が未設定の場合、token 保護された endpoint は 503 を返します。
-token は `mise run reset-token` で `.env` に作成・更新できます。更新後は起動中の
-server を再起動し、Chrome extension など client 側に設定した token も更新してください。
+token は `mise run reset-token` で `.env` に作成・更新できます。
+更新後は起動中の server を再起動し、Chrome extension など client 側に設定した token も更新してください。
 
 現状の認証状態:
 
-| endpoint                 | 認証                                                                    |
-| ------------------------ | ----------------------------------------------------------------------- |
-| `GET /api/health`        | 不要                                                                    |
-| `GET /api/auth/check`    | `BRAIN_API_TOKEN` 必須                                                  |
-| `/api/notes/*`           | `BRAIN_API_TOKEN` 必須                                                  |
-| `/api/index/*`           | `BRAIN_API_TOKEN` 必須                                                  |
-| `POST /api/clip`         | `BRAIN_API_TOKEN` 必須                                                  |
-| `POST /api/sync/webhook` | GitHub webhook signature 必須                                           |
-| `/mcp`                   | 既定は不要。`BRAIN_MCP_REQUIRE_TOKEN=true` で `BRAIN_API_TOKEN` 必須    |
+| endpoint                 | 認証                                                                 |
+| ------------------------ | -------------------------------------------------------------------- |
+| `GET /api/health`        | 不要                                                                 |
+| `GET /api/auth/check`    | `BRAIN_API_TOKEN` 必須                                               |
+| `/api/notes/*`           | `BRAIN_API_TOKEN` 必須                                               |
+| `/api/index/*`           | `BRAIN_API_TOKEN` 必須                                               |
+| `POST /api/clip`         | `BRAIN_API_TOKEN` 必須                                               |
+| `POST /api/sync/webhook` | GitHub webhook signature 必須                                        |
+| `/mcp`                   | 既定は不要。`BRAIN_MCP_REQUIRE_TOKEN=true` で `BRAIN_API_TOKEN` 必須 |
 
 外部公開する場合は、`BRAIN_MCP_REQUIRE_TOKEN=true` にした上で、reverse proxy や network 制限でも守ってください。
 
@@ -93,8 +91,7 @@ Chrome extension や curl から、server 接続と Bearer token の一致だけ
 DB や index の状態には依存しません。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/auth/check"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/auth/check"
 ```
 
 応答:
@@ -122,8 +119,7 @@ curl "http://127.0.0.1:15200/api/health"
 FTS keyword search です。API key は不要です。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/notes/search?q=Docker&limit=20"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/notes/search?q=Docker&limit=20"
 ```
 
 ### Similar
@@ -131,8 +127,7 @@ curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
 Semantic search です。`OPENAI_API_KEY` が必要です。未設定時は空結果になります。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/notes/similar?q=コンテナ運用&limit=10"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/notes/similar?q=コンテナ運用&limit=10"
 ```
 
 ### Suggest Related
@@ -140,8 +135,7 @@ curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
 特定 note に近い note を embedding で探します。`OPENAI_API_KEY` が必要です。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/notes/<note-id>/suggest-related?limit=5"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/notes/<note-id>/suggest-related?limit=5"
 ```
 
 ### Read
@@ -149,8 +143,7 @@ curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
 note id または path で note を読みます。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/notes/<id-or-path>"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/notes/<id-or-path>"
 ```
 
 ### List
@@ -158,8 +151,7 @@ curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
 kind / tag で絞り込めます。
 
 ```bash
-curl -H "Authorization: Bearer $BRAIN_API_TOKEN" \
-  "http://127.0.0.1:15200/api/notes?kind=concept&limit=50"
+curl -H "Authorization: Bearer $BRAIN_API_TOKEN" "http://127.0.0.1:15200/api/notes?kind=concept&limit=50"
 ```
 
 ### Create
@@ -203,11 +195,10 @@ curl -X POST "http://127.0.0.1:15200/api/index/rebuild" \
 
 ## Clip API
 
-Web ページ内容を `raw/articles/` に保存し、index を再構築します。`skip_llm=false` の
-場合、利用可能な LLM provider で要約と tag 生成を試みます。LLM が使えない場合は、
-送信された本文を機械的に保存します。
-保存時は URL を identity として扱います。同じ URL の clip は同じ Markdown ファイルを更新し、
-別 URL であれば title が同じでも別ファイルに保存します。
+Web ページ内容を `raw/articles/` に保存し、index を再構築します。`skip_llm=false` の場合、利用可能な LLM provider で要約と tag 生成を試みます。
+LLM が使えない場合は、送信された本文を機械的に保存します。
+保存時は URL を identity として扱います。
+同じ URL の clip は同じ Markdown ファイルを更新し、別 URL であれば title が同じでも別ファイルに保存します。
 `canonical_url` を送った場合は、同一ページ判定で `canonical_url` を優先します。
 
 ```bash
@@ -225,13 +216,10 @@ curl -X POST "http://127.0.0.1:15200/api/clip" \
 ```
 
 レスポンスには通常の note 情報に加えて、`capture_mode` と `llm_used` が含まれます。
-`capture_mode=ai` は LLM 要約または tag 生成を使った保存、`mechanical` は抽出本文を
-そのまま保存した fallback です。
-保存された `raw/articles/*.md` の frontmatter にも `capture_mode`, `llm_used`, `llm_requested`
-が残ります。`llm_requested=true` かつ `llm_used=false` の場合は、AI を試したが fallback した
-ことを意味します。
-同じファイルへ更新するための `url_hash` と、本文差分を見分けるための `content_hash` も
-frontmatter に残ります。
+`capture_mode=ai` は LLM 要約または tag 生成を使った保存、`mechanical` は抽出本文をそのまま保存した fallback です。
+保存された `raw/articles/*.md` の frontmatter にも `capture_mode`, `llm_used`, `llm_requested` が残ります。
+`llm_requested=true` かつ `llm_used=false` の場合は、AI を試したが fallback したことを意味します。
+同じファイルへ更新するための `url_hash` と、本文差分を見分けるための `content_hash` もfrontmatter に残ります。
 
 ## Sync Webhook
 

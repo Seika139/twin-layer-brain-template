@@ -14,9 +14,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
-from compiler.paths import BASE_DIR
 from compiler.frontmatter import write_note_file
 from compiler.indexer import update_note_embedding, upsert_note_index
+from compiler.paths import BASE_DIR
 from server.auth import require_token
 from server.llm import summarize_page
 from server.routes.notes import NoteResponse

@@ -1,27 +1,23 @@
 [project]
 name = "twin-layer-brain"
-version = "0.1.0"
+version = "0.0.0"
 description = "Twin-layer brain template: SQLite fast search (Layer 1) + LLM self-expanding wiki (Layer 2)"
 requires-python = ">=3.12"
 dependencies = [
-    "python-frontmatter>=1.0",
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.30",
-    "mcp>=1.0",
-    "httpx>=0.27",
-    "openai>=1.0",
-    "sqlite-vec>=0.1",
+  "python-frontmatter>=1.0",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "mcp>=1.0",
+  "httpx>=0.27",
+  "openai>=1.0",
+  "sqlite-vec>=0.1",
 ]
 
 [project.scripts]
 kc = "compiler.cli:main"
 
 [dependency-groups]
-dev = [
-    "ruff",
-    "mypy",
-    "pytest",
-]
+dev = ["ruff", "mypy", "pytest"]
 
 [build-system]
 requires = ["hatchling"]

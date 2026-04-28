@@ -5,8 +5,8 @@ import subprocess
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from compiler.paths import BASE_DIR
 from compiler.indexer import rebuild_index
+from compiler.paths import BASE_DIR
 from server.auth import verify_webhook_signature
 
 router = APIRouter(prefix="/sync")

@@ -4,10 +4,10 @@ import json
 
 from mcp.server.fastmcp import FastMCP
 
-from compiler.paths import BASE_DIR
 from compiler.frontmatter import create_note_file, parse_note
 from compiler.indexer import rebuild_index as _rebuild_index
 from compiler.models import Note
+from compiler.paths import BASE_DIR
 from compiler.search import read_note as _read_note
 from compiler.search import search_fts, search_similar, suggest_related
 
