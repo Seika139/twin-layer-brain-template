@@ -27,6 +27,9 @@ __pycache__/
 # Cloned source repositories — large, licensed separately, reproducible
 # from upstream, and contain nested .git directories. Keep them out of
 # the parent repo regardless of this brain's public/private status.
+# The tracked manifest `repos.json` at the repo root records which repos
+# should be cloned; `mise run update-repos` reconstructs this directory
+# from the manifest on each machine.
 /raw/repos/
 
 # Query-time analysis snapshots. Not canonical and go stale fast; private

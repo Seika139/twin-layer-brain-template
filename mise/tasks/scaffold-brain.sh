@@ -51,7 +51,18 @@ for d in wiki/sources wiki/entities wiki/concepts wiki/topics wiki/analyses; do
   fi
 done
 
-# 3. Reset index.md and log.md to frontmatter-only skeletons.
+# 3. Reset repos.json to an empty manifest (only if it already exists — a freshly
+#    copied template ships with the file; we just empty its entries here).
+if [[ -f "$ROOT_DIR/repos.json" ]]; then
+  cat >"$ROOT_DIR/repos.json" <<'EOF'
+{
+  "repos": []
+}
+EOF
+  echo "  - reset repos.json"
+fi
+
+# 4. Reset index.md and log.md to frontmatter-only skeletons.
 TODAY="$(date +%Y-%m-%d)"
 
 cat >"$ROOT_DIR/wiki/index.md" <<EOF
@@ -112,14 +123,14 @@ echo ""
 #    incident where one of the three files silently kept its template marker.
 remaining=()
 for f in CLAUDE.md AGENTS.md README.md; do
-    if [[ -f "$ROOT_DIR/$f" ]] && grep -q -e "<このブレインが扱う範囲" -e "<ここにこのブレインが" "$ROOT_DIR/$f"; then
-        remaining+=("$f")
-    fi
+  if [[ -f "$ROOT_DIR/$f" ]] && grep -q -e "<このブレインが扱う範囲" -e "<ここにこのブレインが" "$ROOT_DIR/$f"; then
+    remaining+=("$f")
+  fi
 done
-if (( ${#remaining[@]} > 0 )); then
-    echo "[warn] Scope placeholder still present in: ${remaining[*]}" >&2
-    echo "       Open each file and replace the placeholder with this brain's scope." >&2
-    echo ""
+if ((${#remaining[@]} > 0)); then
+  echo "[warn] Scope placeholder still present in: ${remaining[*]}" >&2
+  echo "       Open each file and replace the placeholder with this brain's scope." >&2
+  echo ""
 fi
 
 echo "Next steps:"

@@ -1,6 +1,7 @@
 # twin-layer-brain-template
 
-`twin-layer-brain-template` は、作業領域やプロジェクトごとにコピーして使う個人用 Second Brain テンプレートです。1 つのコピーを 1 つのトピックに割り当て、`raw/` と `wiki/` の Markdown を正本として育てます。
+`twin-layer-brain-template` は、作業領域やプロジェクトごとにコピーして使う個人用 Second Brain テンプレートです。
+1 つのコピーを 1 つのトピックに割り当て、`raw/` と `wiki/` の Markdown を正本として育てます。
 
 > **Scope of this brain:** <ここにこのブレインが扱う範囲を 1 行で書き換える>
 >
@@ -19,7 +20,7 @@
 | Layer 2 | LLM が保守する Markdown Wiki | 知識の統合、解釈、長期的な compound       |
 
 正本は常に Markdown です。SQLite の `index/knowledge.db` は `raw/` と `wiki/` から作る
-派生物で、壊れても `uv run kc index` で再生成できます。
+派生物で、壊れても `mise run index` で再生成できます。
 
 ## ドキュメント
 
@@ -77,8 +78,7 @@ mise run scaffold-brain
 
 ## template repo を保守する
 
-この `twin-layer-brain-template` 自体には、プロジェクト固有の知識を入れません。
-template 側で変更する主なものは以下です。
+この `twin-layer-brain-template` 自体には、プロジェクト固有の知識を入れません。template 側で変更する主なものは以下です。
 
 - `CLAUDE.md` / `AGENTS.md`: LLM agent の運用規約
 - `.agents/skills/`: ingest / query / lint / sublime / dive の skill
@@ -98,7 +98,7 @@ template repo では `mise run scaffold-brain` は通常実行しません。
 ```text
 raw/ と wiki/ の Markdown (正本)
         |
-        | uv run kc index / API 経由の rebuild
+        | mise run index / API 経由の rebuild
         v
 index/knowledge.db (SQLite FTS5 + vec, 派生物)
         |
@@ -109,8 +109,10 @@ LLM が wiki/index.md と関連 Markdown を読んで回答
 
 書き込みは Markdown 側だけに行います。SQL へ直接知識を書き込む運用はしません。
 
-注意: API 経由の note 作成・更新、Web clip、GitHub webhook では `rebuild_index()` が呼ばれます。
-一方で、エディタや LLM が Markdown を直接編集した場合は、検索結果を最新にするために `uv run kc index` または `mise run init` を実行してください。
+### 注意
+
+API 経由の note 作成・更新、Web clip、GitHub webhook では `rebuild_index()` が呼ばれます。
+一方で、エディタや LLM が Markdown を直接編集した場合は、検索結果を最新にするために `mise run index` または `mise run init` を実行してください。
 
 ## ディレクトリ構造
 
@@ -126,11 +128,12 @@ twin-layer-brain-<topic>/
 ├── server/
 ├── deploy/
 ├── mise.toml
+├── repos.json          # raw/repos/ のマニフェスト（tracked）
 ├── raw/
 │   ├── notes/
 │   ├── articles/
 │   ├── assets/
-│   └── repos/          # gitignored
+│   └── repos/          # gitignored（repos.json から再構築）
 ├── wiki/
 │   ├── index.md
 │   ├── log.md
@@ -147,12 +150,15 @@ twin-layer-brain-<topic>/
 ```bash
 mise tasks                 # タスク一覧
 mise run init              # 依存を同期し、SQLite index を作る
-mise run clone-repo owner/repo
-mise run update-repos
+mise run clone-repo owner/repo         # clone + repos.json に記録
+mise run update-repos                  # repos.json に従って同期
+mise run update-repos --prune          # 孤立 repo を .trash/ に退避
+mise run diff-template                 # template remote との差分表示（要 remote 登録、docs/instance-setup.md 参照）
+mise run diff-template --apply         # 差分を template の内容で一括上書き（確認プロンプトあり）
 mise run reset-token      # BRAIN_API_TOKEN を .env に作成・更新
 mise run check-keys       # API key 状態確認（embedding 実生成はしない）
-mise run check-keys --json
-mise run check-keys --color
+mise run check-keys -- --json
+mise run check-keys -- --color
 mise run check-keys-live  # embedding 実生成 probe（原因切り分け時のみ）
 mise run serve
 mise run serve-install    # 常駐 service 登録（macOS: launchd / Linux: systemd --user）
@@ -164,11 +170,14 @@ mise run lint --all       # Markdown + ruff + shfmt
 mise run format           # Markdown のみ
 mise run format --all     # Markdown + ruff + shfmt
 
-uv run kc index
-uv run kc search "Docker"
-uv run kc show <id-or-path>
-uv run kc suggest-related <note-id>
+mise run index            # 検索 index を再構築
+mise run status           # index DB のサイズ / note 件数 / embedding カバレッジ
+mise run kc               # kc CLI の subcommand 一覧から fzf 選択（TTY 必須）
+mise run kc -- search "Docker"    # kc の任意 subcommand を passthrough
 ```
+
+`search` / `show` / `suggest-related` / `new` / `validate` は LLM agent や server が内部で呼ぶ kc subcommand です。
+人間が手動で叩きたい時は `mise run kc` の fzf 選択か `mise run kc -- <subcommand>` を使います。
 
 各タスクの意味は [docs/mise-tasks.md](docs/mise-tasks.md) にまとめています。
 
@@ -178,11 +187,11 @@ uv run kc suggest-related <note-id>
 2. Claude Code / Codex で `ingest raw/...` を実行する。
 3. LLM が `wiki/sources/` を作り、関連する `entities/` / `concepts/` / `topics/`
    を更新する。
-4. `uv run kc index` で Layer 1 の検索 index を更新する。
-5. 検索は `kc search` / REST / MCP / 通常の `query` で行う。
+4. `mise run index` で Layer 1 の検索 index を更新する。
+5. 検索は `kc search` (CLI) / REST / MCP / 通常の `query` で行う。
 
-Layer 1 は「読むべき Markdown 候補を絞る」ための補助です。最終的な回答は
-Layer 2 の `wiki/index.md` と関連 Markdown を読んで作ります。
+Layer 1 は「読むべき Markdown 候補を絞る」ための補助です。
+最終的な回答は Layer 2 の `wiki/index.md` と関連 Markdown を読んで作ります。
 
 詳細:
 
@@ -212,14 +221,13 @@ POST /api/sync/webhook
 ```
 
 `/api/notes/*`、`/api/index/*`、`/api/clip` は `BRAIN_API_TOKEN` の Bearer token を使います。
-`mise run reset-token` で `.env` に token を作成・更新できます。更新した場合は、起動中の server を再起動し、
-Chrome extension 側の token 設定も同じ値に更新してください。
+`mise run reset-token` で `.env` に token を作成・更新できます。
+更新した場合は、起動中の server を再起動し、Chrome extension 側の token 設定も同じ値に更新してください。
 環境変数の優先順位と既定挙動は [docs/environment.md](docs/environment.md) にまとめています。
 
 常駐 service として登録したい場合は `mise run serve-install` を使います。
 macOS では launchd、Linux / WSL では systemd --user を使います。
-VPS で root 管理の system service として運用する場合は `deploy/setup.sh` と
-`deploy/brain.service` を使います。
+VPS で root 管理の system service として運用する場合は `deploy/setup.sh` と `deploy/brain.service` を使います。
 
 HTTP API の詳細は [docs/http-api.md](docs/http-api.md)、MCP の詳細は
 [docs/mcp.md](docs/mcp.md) を参照してください。
