@@ -70,8 +70,8 @@ template remote と自 instance の差分を表示 / 適用します。
 
 適用時の挙動:
   M (両方に存在し内容が異なる): template の内容で上書き
-  D (template のみに存在):      template から復元
-  A (instance のみに存在):      スキップ (instance 固有の拡張として保護)
+  A (template のみに存在):      template から取り込み (instance に追加)
+  D (instance のみに存在):      スキップ (instance 固有の拡張として保護)
 EOF
     exit 0
     ;;
@@ -190,19 +190,21 @@ if [[ "$INCLUDE_INSTANCE" -eq 0 ]]; then
 fi
 
 echo ""
-print_blue "=== diff-template ($BASE_REF..$HEAD_REF) ==="$'\n'
+print_blue "=== diff-template ($HEAD_REF..$BASE_REF) ==="$'\n'
 if [[ "$INCLUDE_INSTANCE" -eq 0 ]]; then
   echo "(instance 固有 path は除外。--all で含める)"
 fi
 echo ""
 
 # 変更ファイルを `A`, `M`, `D`, `R...` 別に集計する共通関数。
-# git diff BASE..HEAD の方向に注意:
-#   A = HEAD (instance) で追加 → instance にのみ存在
-#   M = 両方に存在、内容が異なる
-#   D = HEAD (instance) で削除 → template にのみ存在 (= apply で復元対象)
+# diff の方向は HEAD..BASE (= instance..template)。
+# `+` が「apply で手元に来る内容」、`-` が「apply で消える内容」と読めるよう揃えてある。
+#   A = BASE (template) のみ存在 → apply で instance に取り込む追加対象
+#   M = 両方に存在、内容が異なる → apply で template の内容で上書き
+#   D = HEAD (instance) のみ存在 → instance 固有の追加 (= apply では保護)
+#   R... = rename (HEAD-side -> BASE-side の順で出る)
 collect_changed_files() {
-  git diff --name-status "$BASE_REF".."$HEAD_REF" -- "${PATHSPEC[@]}" || true
+  git diff --name-status "$HEAD_REF".."$BASE_REF" -- "${PATHSPEC[@]}" || true
 }
 
 print_list() {
@@ -214,7 +216,7 @@ print_list() {
   renamed=$(echo "$changed" | awk '$1 ~ /^R/{print $2" -> "$3}')
 
   if [[ -n "$added" ]]; then
-    print_blue "追加 (instance のみ存在 / 適用時は保護されスキップ):"$'\n'
+    print_blue "追加 (template のみ存在 / 適用時は instance に取り込み):"$'\n'
     echo "$added" | sed 's/^/  /'
     echo ""
   fi
@@ -224,12 +226,12 @@ print_list() {
     echo ""
   fi
   if [[ -n "$deleted" ]]; then
-    print_blue "削除 (template のみ存在 = instance で削除済み / 適用時は template から復元):"$'\n'
+    print_blue "instance 固有 (instance のみ存在 / 適用時は保護されスキップ):"$'\n'
     echo "$deleted" | sed 's/^/  /'
     echo ""
   fi
   if [[ -n "$renamed" ]]; then
-    print_blue "リネーム:"$'\n'
+    print_blue "リネーム (instance-side -> template-side / 適用対象外、手動取り込み):"$'\n'
     echo "$renamed" | sed 's/^/  /'
     echo ""
   fi
@@ -252,7 +254,7 @@ list)
 EOF
   ;;
 diff)
-  git --no-pager diff "$BASE_REF".."$HEAD_REF" -- "${PATHSPEC[@]}"
+  git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${PATHSPEC[@]}"
   ;;
 apply)
   CHANGED_FILES="$(collect_changed_files)"
@@ -261,7 +263,11 @@ apply)
     exit 0
   fi
 
-  # 適用対象 (M + D)、保護対象 (A)、手動対象 (R) を分離する。
+  # 適用対象 (M + A)、保護対象 (D)、手動対象 (R) を分離する。
+  # diff 方向は HEAD..BASE なので:
+  #   M = 両方にあり差分 → template の内容で上書き
+  #   A = template のみ → template から取り込み (どちらも git checkout BASE -- <path> で完了)
+  #   D = instance のみ → 保護 (apply 対象外)
   # R は rename 検出ヒューリスティックで出るため、どちらの側が rename したかを
   # 機械的に判別できない（template が改名したのか instance が改名したのか不明）。
   # 自動 apply は事故源になりうるので一覧で警告し、人間に判断を委ねる。
@@ -269,7 +275,10 @@ apply)
   to_skip_rename=()
   while IFS=$'\t' read -r status path rest; do
     case "$status" in
-    M | D) to_overwrite+=("$path") ;;
+    M | A) to_overwrite+=("$path") ;;
+    # rename: $path = HEAD-side (instance), $rest = BASE-side (template).
+    # apply の手順は「instance の path を rm → template の path を checkout」なので、
+    # 表示は "instance-side -> template-side" の方向で揃える (= 格納も同順)。
     R*) to_skip_rename+=("$path"$'\t'"$rest") ;;
     esac
   done <<<"$CHANGED_FILES"
@@ -278,12 +287,12 @@ apply)
   print_list "$CHANGED_FILES"
 
   if [[ ${#to_overwrite[@]} -eq 0 ]]; then
-    print_blue "適用対象の変更 (M / D) はありません。A (instance のみ存在) は保護されます。"$'\n'
+    print_blue "適用対象の変更 (M / A) はありません。D (instance 固有 path) は保護されます。"$'\n'
     if [[ ${#to_skip_rename[@]} -gt 0 ]]; then
       print_orange "rename は自動 apply 対象外です。必要に応じて手動で取り込んでください:"$'\n'
       for entry in "${to_skip_rename[@]}"; do
-        IFS=$'\t' read -r tmpl_path inst_path <<<"$entry"
-        echo "  $tmpl_path -> $inst_path"
+        IFS=$'\t' read -r inst_path tmpl_path <<<"$entry"
+        echo "  $inst_path -> $tmpl_path"
         echo "    git rm -- '$inst_path'"
         echo "    git checkout $BASE_REF -- '$tmpl_path'"
       done
@@ -322,10 +331,11 @@ EOF
   fi
 
   # 差分の中身を全部見せる (--yes の時は省略)。ユーザーが独自変更に気付く導線。
+  # diff 方向は HEAD..BASE なので、`+` が「apply で適用される内容」として読める。
   if [[ "$SKIP_CONFIRM" -eq 0 ]]; then
-    echo "--- 以下の差分を template の内容で上書きします ---"
+    echo "--- 以下の差分を template の内容で上書きします (+ が apply 後の内容) ---"
     echo ""
-    git --no-pager diff "$BASE_REF".."$HEAD_REF" -- "${to_overwrite[@]}"
+    git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${to_overwrite[@]}"
     echo ""
     print_blue "コミット済みの独自編集は git reflog で復旧可能ですが、未コミットの WIP は復旧できません。"$'\n'
     echo ""
@@ -373,8 +383,8 @@ EOF
     echo ""
     print_orange "[skip] rename ${#to_skip_rename[@]} 件は自動 apply 対象外です。必要なら以下を手動で実行してください:"$'\n'
     for entry in "${to_skip_rename[@]}"; do
-      IFS=$'\t' read -r tmpl_path inst_path <<<"$entry"
-      echo "  $tmpl_path -> $inst_path"
+      IFS=$'\t' read -r inst_path tmpl_path <<<"$entry"
+      echo "  $inst_path -> $tmpl_path"
       echo "    git rm -- '$inst_path'"
       echo "    git checkout $BASE_REF -- '$tmpl_path'"
     done
