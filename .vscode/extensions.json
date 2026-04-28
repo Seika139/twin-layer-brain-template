@@ -5,6 +5,7 @@
     "bierner.markdown-mermaid",
     "davidanson.vscode-markdownlint",
     "rvben.rumdl",
+    "tamasfe.even-better-toml",
     "streetsidesoftware.code-spell-checker"
   ]
 }

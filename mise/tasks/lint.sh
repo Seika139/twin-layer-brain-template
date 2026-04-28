@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="lint を実行する（既定: Markdown のみ、--all/-a: Markdown + ruff + shfmt）"
+#MISE description="lint を実行する（既定: Markdown のみ、--all/-a: Markdown + ruff + shfmt + taplo）"
 #MISE quiet=true
 
 set -euo pipefail
@@ -27,7 +27,10 @@ rumdl check .
 markdownlint-cli2
 
 if [[ "$all" == "1" ]]; then
-  print_blue "Markdown の Lint に加えて ruff と shfmt も実行します"$'\n'
+  print_blue "Lint Python files with ruff"$'\n'
   uv run ruff check compiler server tests mise/tasks/lib
+  print_blue "Lint shell scripts with shfmt"$'\n'
   shfmt -d mise/tasks/*.sh mise/tasks/lib/*.sh
+  print_blue "Lint toml with taplo"$'\n'
+  taplo fmt --check --diff
 fi
