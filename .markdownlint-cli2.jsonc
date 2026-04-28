@@ -32,6 +32,7 @@
   "ignores": [
     "raw/repos/**", // clone した外部 repo は gitignore でも除外されるが明示
     "raw/articles/**", // Web clip は外部本文を含む source material なので整形しない
+    "raw/notes/**", // user-owned な自由記述メモ（LLM は編集不可）。frontmatter title と本文 H1 の重複など書式の揺れを許容する
     "node_modules/**",
     "tmp/**",
     ".serena/**" // Serena のローカル状態・メモは repo 本体の文書対象外

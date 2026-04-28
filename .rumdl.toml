@@ -27,13 +27,16 @@ disable = [
 # it explicit so intent is readable.
 respect_gitignore = true
 
-# Skip cloned source repos, web-clipped articles, scratch tmp/, and Serena's local state.
-# `.gitignore` already excludes these paths and respect-gitignore would
-# catch part of it, but listing them here makes the intent obvious when
-# someone reads just this file.
+# Skip cloned source repos, web-clipped articles, user-owned free-form
+# notes, scratch tmp/, and Serena's local state. `.gitignore` already
+# excludes part of these paths and respect-gitignore would catch some of
+# it, but listing them here makes the intent obvious when someone reads
+# just this file. `raw/notes/**` is tracked but LLM-immutable, so the
+# linter should not enforce style there either.
 exclude = [
   "raw/repos/**",
   "raw/articles/**",
+  "raw/notes/**",
   "node_modules/**",
   "tmp/**",
   ".serena/**",
