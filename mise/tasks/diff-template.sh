@@ -257,7 +257,7 @@ diff)
 apply)
   CHANGED_FILES="$(collect_changed_files)"
   if [[ -z "$CHANGED_FILES" ]]; then
-    print_blue "差分はありません。適用する変更はありません。"
+    print_blue "差分はありません。適用する変更はありません。"$'\n'
     exit 0
   fi
 
@@ -278,9 +278,8 @@ apply)
   print_list "$CHANGED_FILES"
 
   if [[ ${#to_overwrite[@]} -eq 0 ]]; then
-    print_blue "適用対象の変更 (M / D) はありません。A (instance のみ存在) は保護されます。"
+    print_blue "適用対象の変更 (M / D) はありません。A (instance のみ存在) は保護されます。"$'\n'
     if [[ ${#to_skip_rename[@]} -gt 0 ]]; then
-      echo ""
       print_orange "rename は自動 apply 対象外です。必要に応じて手動で取り込んでください:"$'\n'
       for entry in "${to_skip_rename[@]}"; do
         IFS=$'\t' read -r tmpl_path inst_path <<<"$entry"
@@ -328,7 +327,7 @@ EOF
     echo ""
     git --no-pager diff "$BASE_REF".."$HEAD_REF" -- "${to_overwrite[@]}"
     echo ""
-    print_blue "コミット済みの独自編集は git reflog で復旧可能ですが、未コミットの WIP は復旧できません。"
+    print_blue "コミット済みの独自編集は git reflog で復旧可能ですが、未コミットの WIP は復旧できません。"$'\n'
     echo ""
 
     if ! is_tty; then
@@ -345,7 +344,7 @@ EOF
     fi
 
     if ! binary_choice "これらを適用しますか？"; then
-      print_blue "キャンセルしました。"
+      print_blue "キャンセルしました。"$'\n'
       exit 0
     fi
   fi
@@ -356,18 +355,18 @@ EOF
   failed=()
   for path in "${to_overwrite[@]}"; do
     if git checkout "$BASE_REF" -- "$path" 2>/dev/null; then
-      print_blue "  [適用] $path"
+      print_blue "  [適用] $path"$'\n'
     else
-      print_red "  [失敗] $path"
+      print_red "  [失敗] $path"$'\n'
       failed+=("$path")
     fi
   done
 
   echo ""
   if [[ ${#failed[@]} -gt 0 ]]; then
-    print_red "[warn] ${#failed[@]} 件の適用に失敗しました。手動で確認してください。"
+    print_red "[warn] ${#failed[@]} 件の適用に失敗しました。手動で確認してください。"$'\n'
   else
-    print_blue "${#to_overwrite[@]} 件を適用しました。"
+    print_blue "${#to_overwrite[@]} 件を適用しました。"$'\n'
   fi
 
   if [[ ${#to_skip_rename[@]} -gt 0 ]]; then
