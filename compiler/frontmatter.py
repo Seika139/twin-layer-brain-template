@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -9,10 +10,34 @@ import frontmatter
 from compiler.models import Note
 
 
+class FrontmatterParseError(ValueError):
+    """Raised when a note's YAML frontmatter cannot be parsed.
+
+    Wraps the underlying `yaml` / `frontmatter` exception so callers can
+    identify the offending file without losing the original traceback.
+    """
+
+    def __init__(self, path: Path, cause: Exception) -> None:
+        super().__init__(f"Failed to parse frontmatter in {path}: {cause}")
+        self.path = path
+        self.cause = cause
+
+
+@dataclass
+class FrontmatterIssue:
+    """Structured finding from `validate_frontmatter`."""
+
+    path: Path
+    message: str
+
+
 def parse_note(path: Path) -> Note:
     """Parse a Markdown file into a Note, handling missing frontmatter."""
     raw = path.read_text(encoding="utf-8")
-    post = frontmatter.loads(raw)
+    try:
+        post = frontmatter.loads(raw)
+    except Exception as e:
+        raise FrontmatterParseError(path, e) from e
     meta = post.metadata
 
     note_id = meta.get("id", path.stem)
@@ -143,3 +168,27 @@ def _parse_datetime(value: object) -> datetime | None:
         return datetime.fromisoformat(str(value))
     except (ValueError, TypeError):
         return None
+
+
+def validate_frontmatter(path: Path) -> FrontmatterIssue | None:
+    """Return an issue description if the file's frontmatter cannot be parsed.
+
+    YAML の予約文字（バッククォート、`@`、`:` など）で始まる未 quoted な値は
+    ScannerError を起こすため、`kc index` / `lint` の前段で機械的に検出する。
+    """
+    try:
+        parse_note(path)
+    except FrontmatterParseError as e:
+        cause = e.cause
+        return FrontmatterIssue(path=path, message=str(cause))
+    return None
+
+
+def scan_frontmatter(paths: list[Path]) -> list[FrontmatterIssue]:
+    """Validate multiple files, returning all issues found."""
+    issues: list[FrontmatterIssue] = []
+    for path in paths:
+        issue = validate_frontmatter(path)
+        if issue is not None:
+            issues.append(issue)
+    return issues

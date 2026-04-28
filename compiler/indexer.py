@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
+from pathlib import Path
 
 import sqlite_vec
 
-from pathlib import Path
-
 from compiler.config import CONTENT_DIRS
-from compiler.paths import BASE_DIR, DB_PATH, INDEX_DIR
 from compiler.embedding import generate_embedding, is_embedding_available
-from compiler.frontmatter import parse_note
+from compiler.frontmatter import FrontmatterParseError, parse_note
 from compiler.models import Note
+from compiler.paths import BASE_DIR, DB_PATH, INDEX_DIR
 
 
 def ensure_db() -> sqlite3.Connection:
@@ -81,16 +81,27 @@ def rebuild_index() -> int:
     conn.commit()
 
     count = 0
+    skipped = 0
     for dir_name in CONTENT_DIRS:
         dir_path = BASE_DIR / dir_name
         if not dir_path.exists():
             continue
         for md_file in sorted(dir_path.rglob("*.md")):
-            note = parse_note(md_file)
+            try:
+                note = parse_note(md_file)
+            except FrontmatterParseError as e:
+                print(f"[skip] {e}", file=sys.stderr)
+                skipped += 1
+                continue
             _upsert_note(conn, note)
             count += 1
 
     conn.commit()
+    if skipped:
+        print(
+            f"[warning] skipped {skipped} file(s) due to frontmatter parse errors",
+            file=sys.stderr,
+        )
 
     if is_embedding_available():
         _rebuild_embeddings(conn)

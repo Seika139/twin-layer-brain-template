@@ -26,7 +26,8 @@ One flat tier. Public/private is decided per repository — this template stays 
 | `raw/notes/`     | tracked       | user  | own notes, voice memo transcripts, meeting notes. Immutable — LLM never edits.                                                                                                                                |
 | `raw/articles/`  | tracked       | user  | web clippings, downloaded PDFs, papers.                                                                                                                                                                       |
 | `raw/assets/`    | tracked       | user  | images, diagrams, screenshots.                                                                                                                                                                                |
-| `raw/repos/`     | **ignored**   | user  | cloned source repositories (nested `.git`, large, licensed separately, reproducible from upstream).                                                                                                           |
+| `raw/repos/`     | **ignored**   | user  | cloned source repositories (nested `.git`, large, licensed separately, reproducible from upstream). Which repos belong here is recorded in the tracked `repos.json`.                                          |
+| `repos.json`     | tracked       | user  | manifest of repos that should be cloned into `raw/repos/`. `mise run clone-repo` appends to it; `mise run update-repos` reconstructs `raw/repos/` from it on every machine.                                    |
 | `wiki/index.md`  | tracked       | LLM   | catalog of all wiki pages. Always kept current.                                                                                                                                                               |
 | `wiki/log.md`    | tracked       | LLM   | chronological, append-only record of ingests / queries / lint passes / refactors.                                                                                                                             |
 | `wiki/sources/`  | tracked       | LLM   | one file per ingested source, summarizing it and linking back to `raw/`.                                                                                                                                      |
@@ -53,7 +54,7 @@ The gitignore defaults assume the repository can tolerate either public or priva
 
 - Never edit `raw/notes/` — it is user-owned. `raw/{articles,assets,repos}/` is also user-curated; LLM may read but should not rewrite.
 - Treat `wiki/` as append/update-only in normal operation; deletion requires an explicit refactor and a log entry.
-- If you clone a repo into `raw/repos/` manually, prefer `mise run clone-repo` (it normalises the target path).
+- If you clone a repo into `raw/repos/` manually, prefer `mise run clone-repo` (it normalises the target path **and records the repo in `repos.json`** so other machines can reconstruct the same set via `mise run update-repos`).
 
 ## Citation style
 
@@ -89,7 +90,7 @@ Every wiki page starts with YAML frontmatter:
 
 ```yaml
 ---
-title: <human-readable title, typically Japanese>
+title: <human-readable title, typically Japanese>   # 値が ` / @ / : / [ / { / # 等で始まる場合はダブルクォートで囲む（YAML 予約文字）
 type: source | entity | concept | topic | analysis | index | log
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -97,6 +98,11 @@ sources: [sources/2026-04-21-karpathy-llm-wiki] # which sources contributed
 tags: [tag1, tag2] # free-form categorization
 ---
 ```
+
+> **YAML quoting**: タイトルに `` ` `` / `:` / `@` / `[` / `{` / `#` / `>` / `|` /
+> `&` / `*` / `!` / `%` を含める場合、**必ず値全体をダブルクォートで囲う**
+> （これらは YAML プレーンスカラーの先頭で使えない予約文字）。
+> 書いた後は `mise run validate` で機械的に検証できる。
 
 Body structure (guideline, adapt per page):
 

@@ -48,7 +48,7 @@ Frontmatter:
 
 ```yaml
 ---
-title: <日本語タイトル>
+title: <日本語タイトル>   # 値が ` / @ / : / [ / { / # などで始まる場合はダブルクォートで囲むこと（YAML 予約文字）
 type: topic
 created: <today>
 updated: <today>

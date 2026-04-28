@@ -57,7 +57,7 @@ Kebab-case English for filenames. Dated sources: `YYYY-MM-DD-<slug>.md`. Japanes
 
 ```yaml
 ---
-title: <human-readable title>
+title: <human-readable title>   # 値が ` / @ / : / [ / { / # 等で始まる場合はダブルクォートで囲む（YAML 予約文字）
 type: source | entity | concept | topic | analysis | index | log
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -65,6 +65,12 @@ sources: [sources/<slug>]
 tags: [tag1, tag2]
 ---
 ```
+
+> **YAML quoting**: タイトルに `` ` `` / `:` / `@` / `[` / `{` / `#` / `>` / `|` /
+> `&` / `*` / `!` / `%` を含める場合、必ず値全体をダブルクォートで囲う
+> （YAML プレーンスカラーの先頭で使えない予約文字）。
+> 書いた後は `mise run validate` で機械的に検証できる。
+> 違反すると `kc index` が該当ファイルをスキップし、Layer 1 の索引から漏れる。
 
 Topic pages additionally carry **Core thesis / Stable takeaway** bullets and a **Direct Citations** section that interleaves `[[wiki-links]]` with raw-file links (`[excerpt](../../raw/notes/...)`, `[config](../../raw/repos/<repo>/...)`) so the thesis is verifiable without a 1-hop detour.
 
@@ -167,8 +173,11 @@ For a session that has touched many files, run the project-wide task instead:
 ```bash
 mise run format
 mise run lint
+mise run validate   # wiki/raw の frontmatter が壊れていないか機械的にチェック
 ```
 
 Use `mise run format --all` and `mise run lint --all` when Python or shell task files were also touched.
+
+`mise run validate` は `.agents/skills/ingest/SKILL.md` に従って frontmatter を書いた直後、あるいは `sublime` で topic を作った直後に実行するのが望ましい。parse できないファイルは `kc index` から弾かれるため、Layer 1 検索から見えなくなる。
 
 This is the Codex-side counterpart to the Claude Code hook configured in `.claude/settings.json`.

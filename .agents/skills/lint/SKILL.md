@@ -26,6 +26,10 @@ Run all five, always, even if some return zero findings.
 
 Issues that are trivially correctable but still need user confirmation:
 
+- **YAML parse error** — frontmatter that fails `yaml.safe_load`. 典型: `title:`
+  がバッククォート / `@` / `:` / `[` / `{` などの YAML 予約文字で始まっている、
+  未クォートのコロンを含む等。`mise run validate`（= `uv run kc validate`）で
+  機械的に検出できる。parse error は索引から弾かれるため最優先で直す。
 - Broken `[[wiki-links]]` — target file doesn't exist.
 - Frontmatter drift — missing required fields (`title`, `type`, `created`, `updated`), wrong `type` values, bad date format.
 - Typo-level inconsistency — `[[entities/Foam]]` vs `[[entities/foam]]`.

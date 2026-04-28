@@ -36,7 +36,7 @@ Kebab-case English filename. Japanese body. Frontmatter:
 
 ```yaml
 ---
-title: <日本語タイトル>
+title: <日本語タイトル>   # 値が ` / @ / : / [ / { / # などで始まる場合はダブルクォートで囲むこと（YAML 予約文字）
 type: source
 created: <today, YYYY-MM-DD>
 updated: <today>
@@ -44,6 +44,11 @@ sources: []     # a source page does not cite other sources in this slot
 tags: [<tag1>, <tag2>]
 ---
 ```
+
+> **YAML 予約文字の注意**: `title: \`foo\`` のように先頭にバッククォートを置くと
+> `yaml.scanner.ScannerError` で `kc index` が該当ファイルをスキップする。
+> 記号を含むタイトルは必ず `title: "`foo` は bar"` のようにダブルクォートで囲む。
+> 書いた後に `mise run validate` で機械的に検証できる。
 
 Body structure:
 

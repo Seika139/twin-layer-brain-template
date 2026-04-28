@@ -24,6 +24,26 @@ run = [
 ]
 
 # --- Layer 1 (SQLite) CLI --------------------------------------------------
+# 人間が直接叩く kc 系 task は以下に絞っている。
+# `search` / `show` / `suggest-related` / `new` などは LLM agent や server が
+# 内部で `uv run kc <subcommand>` として呼ぶ想定。
+# ユーザーがそれらを手動で叩きたい場合は `mise run kc` (fzf 選択、TTY 時) か
+# `mise run kc -- <subcommand> [args...]` を使う。
+
+[tasks.index]
+description = "検索 index (SQLite FTS5 + vec) を再構築する"
+quiet = true
+run = 'uv run kc index "$@"'
+
+[tasks.validate]
+description = "索引対象の Markdown frontmatter を機械的にチェックする（YAML parse error 検出）"
+quiet = true
+run = "uv run kc validate"
+
+[tasks.status]
+description = "index DB のサイズ / note 件数 / embedding カバレッジを表示する"
+quiet = true
+run = "uv run kc status"
 
 [tasks.check-keys]
 description = "LLM API key と embedding 設定状態を確認する（引数: --json, --color）"
@@ -34,6 +54,9 @@ run = 'uv run kc check-keys "$@"'
 description = "LLM API key と embedding 実生成 probe を確認する（API 使用あり、引数: --json, --color）"
 quiet = true
 run = 'uv run kc check-keys --live-embedding "$@"'
+
+# `kc` passthrough は mise/tasks/kc.sh に実装。
+# 引数なし + TTY なら fzf で subcommand 選択、非 TTY ならエラー案内。
 
 # --- Layer 1 server (FastAPI + MCP) ----------------------------------------
 

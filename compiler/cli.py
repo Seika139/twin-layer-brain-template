@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from compiler.paths import BASE_DIR
 from compiler.env import load_dotenv
 from compiler.key_check import KeyStatus
+from compiler.paths import BASE_DIR
 
 _BADGE = {
     "OK": "[ OK  ]",
@@ -50,6 +50,12 @@ def main() -> None:
     # kc index
     sub.add_parser("index", help="Rebuild the search index")
 
+    # kc validate
+    sub.add_parser(
+        "validate",
+        help="Check frontmatter syntax across all indexed directories",
+    )
+
     # kc search <query>
     p_search = sub.add_parser("search", help="Search notes")
     p_search.add_argument("query", help="Search query")
@@ -62,6 +68,9 @@ def main() -> None:
     # kc suggest-related <id_or_path>
     p_related = sub.add_parser("suggest-related", help="Suggest related notes")
     p_related.add_argument("id_or_path", help="Note ID or path")
+
+    # kc status
+    sub.add_parser("status", help="Show a summary of the current index")
 
     # kc check-keys
     p_check = sub.add_parser("check-keys", help="Check availability of LLM API keys")
@@ -91,12 +100,16 @@ def main() -> None:
         _cmd_new(args)
     elif args.command == "index":
         _cmd_index()
+    elif args.command == "validate":
+        _cmd_validate()
     elif args.command == "search":
         _cmd_search(args)
     elif args.command == "show":
         _cmd_show(args)
     elif args.command == "suggest-related":
         _cmd_suggest_related(args)
+    elif args.command == "status":
+        _cmd_status()
     elif args.command == "check-keys":
         _cmd_check_keys(args)
 
@@ -119,6 +132,32 @@ def _cmd_index() -> None:
 
     count = rebuild_index()
     print(f"Indexed {count} notes")
+
+
+def _cmd_validate() -> None:
+    from compiler.config import CONTENT_DIRS
+    from compiler.frontmatter import scan_frontmatter
+
+    paths: list[Path] = []
+    for dir_name in CONTENT_DIRS:
+        dir_path = BASE_DIR / dir_name
+        if not dir_path.exists():
+            continue
+        paths.extend(sorted(dir_path.rglob("*.md")))
+
+    issues = scan_frontmatter(paths)
+    if not issues:
+        print(f"Checked {len(paths)} file(s). No frontmatter issues found.")
+        return
+
+    print(f"Found {len(issues)} frontmatter issue(s):", file=sys.stderr)
+    for issue in issues:
+        try:
+            rel = issue.path.relative_to(BASE_DIR)
+        except ValueError:
+            rel = issue.path
+        print(f"  {rel}: {issue.message}", file=sys.stderr)
+    sys.exit(1)
 
 
 def _cmd_search(args: argparse.Namespace) -> None:
@@ -169,6 +208,13 @@ def _cmd_show(args: argparse.Namespace) -> None:
         print(f"Related: {', '.join(note.related)}")
     print("---")
     print(note.body_text)
+
+
+def _cmd_status() -> None:
+    from compiler.status import collect_status, format_human
+
+    status = collect_status()
+    print(format_human(status), end="")
 
 
 def _cmd_check_keys(args: argparse.Namespace) -> None:
