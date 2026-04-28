@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
 #MISE description="lint を実行する（既定: Markdown のみ、--all/-a: Markdown + ruff + shfmt）"
+#MISE quiet=true
 
 set -euo pipefail
+
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 
 all=0
 
@@ -12,17 +16,18 @@ for arg in "$@"; do
     all=1
     ;;
   *)
-    echo "Usage: mise run lint [--all|-a]" >&2
+    print_red "Usage: mise run lint [--all|-a]" >&2
     exit 2
     ;;
   esac
 done
 
+print_blue "Linting Markdown files"
 rumdl check .
 markdownlint-cli2
 
 if [[ "$all" == "1" ]]; then
-  echo "Markdown に加えて ruff と shfmt も実行します..."
-  uv run ruff check compiler server tests
+  print_blue "Markdown の Lint に加えて ruff と shfmt も実行します"$'\n'
+  uv run ruff check compiler server tests mise/tasks/lib
   shfmt -d mise/tasks/*.sh mise/tasks/lib/*.sh
 fi
