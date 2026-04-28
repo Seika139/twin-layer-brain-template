@@ -66,15 +66,12 @@ cd ~/programs/brains/twin-layer-brain-<topic>
 
 ```bash
 mise install
-uv sync
-pnpm install
-
+mise init
 mise run scaffold-brain
-mise run init
 ```
 
-その後、`README.md` / `CLAUDE.md` / `AGENTS.md` の Scope 行を、その brain が扱う
-作業領域に合わせて書き換えます。
+`pyproject.toml` の name と version を書き換えます。
+`README.md` / `CLAUDE.md` / `AGENTS.md` の Scope 行を、その brain が扱う作業領域に合わせて書き換えます。
 
 詳しい手順は [docs/instance-setup.md](docs/instance-setup.md) を参照してください。
 
