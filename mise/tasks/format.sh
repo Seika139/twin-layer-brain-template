@@ -22,7 +22,7 @@ for arg in "$@"; do
   esac
 done
 
-print_blue "Formatting Markdown files"
+print_blue "Formatting Markdown files"$'\n'
 rumdl check --fix .
 markdownlint-cli2 --fix
 
