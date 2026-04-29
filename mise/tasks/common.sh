@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+#MISE hide=true
+
 # 色付けヘルパー関数
 # 基本色（ANSI 16色）
 print_red() { printf '\e[31m%s\e[0m' "$*"; }
