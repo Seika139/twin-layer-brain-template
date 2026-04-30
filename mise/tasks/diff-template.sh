@@ -166,6 +166,7 @@ HEAD_REF="HEAD"
 # instance 固有 path (既定では除外)。
 # --all を付けると比較対象に含める。
 INSTANCE_PATHSPEC=(
+  ':(exclude).github/workflows/**'
   ':(exclude)chrome-extension/icon48.png'
   ':(exclude)chrome-extension/icon128.png'
   ':(exclude)chrome-extension/manifest.json'
@@ -180,6 +181,7 @@ INSTANCE_PATHSPEC=(
   ':(exclude)wiki/log.md'
   ':(exclude).env'
   ':(exclude)AGENTS.md'
+  ':(exclude)CHANGELOG.md'
   ':(exclude)CLAUDE.md'
   ':(exclude)pyproject.toml'
   ':(exclude)repos.json'
