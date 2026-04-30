@@ -12,6 +12,7 @@ pnpm = "latest"
 shfmt = "latest"
 rumdl = "latest"
 taplo = "latest"
+yamllint = "latest"
 
 [tasks.init]
 description = "brain instance の初期化（ディレクトリ作成、依存同期、index .env 作成）"

@@ -29,8 +29,13 @@ markdownlint-cli2
 if [[ "$all" == "1" ]]; then
   print_blue "Lint Python files with ruff"$'\n'
   uv run ruff check compiler server tests mise/tasks/lib
+
   print_blue "Lint shell scripts with shfmt"$'\n'
   shfmt -d mise/tasks/*.sh mise/tasks/lib/*.sh
+
   print_blue "Lint toml with taplo"$'\n'
   taplo fmt --check --diff
+
+  print_blue "Lint YAML files with yamllint"$'\n'
+  yamllint .
 fi
