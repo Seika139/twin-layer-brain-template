@@ -67,3 +67,13 @@ run = "uv run python -m server.run"
 [tasks.test]
 description = "Python test suite を実行する"
 run = "uv run pytest"
+
+# --- Chrome extension ------------------------------------------------------
+
+[tasks.recolor-icon]
+description = "chrome-extension/icon{48,128}.png の accent color を差し替える（引数なしでランダム生成 / 例: mise run recolor-icon -- '#7b1fa2'）"
+quiet = true
+# mise は task run 文字列の末尾にユーザー引数を連結するだけで $1/$@ を設定しない。
+# そのため sh -c "script" -- で自前 sub-shell を開き、連結された引数を $1 として受ける。
+# 引数未指定 (= $1 が空) のときは recolor-icon.py 側で HSV 範囲内の色をランダム生成する。
+run = '''sh -c "uv run --with pillow python mise/tasks/lib/recolor-icon.py \${1:+--target \"\$1\"} chrome-extension/icon48.png chrome-extension/icon128.png" --'''
