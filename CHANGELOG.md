@@ -7,7 +7,12 @@
 
 ## Tagged Releases
 
+- [unreleased](https://github.com/Seika139/twin-layer-brain-template/compare/v0.1.0...HEAD)
+- [0.1.0](https://github.com/Seika139/twin-layer-brain-template/releases/tag/v0.1.0)
+
 ## [Unreleased]
+
+## [0.1.0] - 2026-05-01
 
 ### Added
 
