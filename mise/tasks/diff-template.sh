@@ -166,6 +166,10 @@ HEAD_REF="HEAD"
 # instance 固有 path (既定では除外)。
 # --all を付けると比較対象に含める。
 INSTANCE_PATHSPEC=(
+  ':(exclude)chrome-extension/icon48.png'
+  ':(exclude)chrome-extension/icon128.png'
+  ':(exclude)chrome-extension/manifest.json'
+  ':(exclude)index/**'
   ':(exclude)raw/**'
   ':(exclude)wiki/sources/**'
   ':(exclude)wiki/entities/**'
@@ -174,14 +178,13 @@ INSTANCE_PATHSPEC=(
   ':(exclude)wiki/analyses/**'
   ':(exclude)wiki/index.md'
   ':(exclude)wiki/log.md'
-  ':(exclude)index/**'
-  ':(exclude)repos.json'
   ':(exclude).env'
-  ':(exclude)pyproject.toml'
-  ':(exclude)uv.lock'
   ':(exclude)AGENTS.md'
   ':(exclude)CLAUDE.md'
+  ':(exclude)pyproject.toml'
+  ':(exclude)repos.json'
   ':(exclude)README.md'
+  ':(exclude)uv.lock'
 )
 
 PATHSPEC=()
