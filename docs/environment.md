@@ -69,8 +69,6 @@ OPENAI_API_KEY=sk-dotenv
 | `GEMINI_API_KEY`          | なし                      | Web clip 要約用 LLM、key check   | Gemini は provider 候補から外れる                       |
 | `ANTHROPIC_API_KEY`       | なし                      | Web clip 要約用 LLM、key check   | Anthropic は provider 候補から外れる                    |
 | `BRAIN_LLM_PRIORITY`      | `openai,gemini,anthropic` | Web clip 要約 provider 選択      | default 順に利用可能 provider を探す                    |
-| `SSL_CERT_FILE`           | なし                      | Python 標準 `ssl` の CA bundle   | certifi バンドルを使う (MITM プロキシ環境では検証失敗)  |
-| `REQUESTS_CA_BUNDLE`      | なし                      | `requests` ライブラリの CA bundle | certifi バンドルを使う (同上)                           |
 
 ## BRAIN_API_TOKEN
 
@@ -195,38 +193,19 @@ BRAIN_LLM_PRIORITY=gemini,openai,anthropic
 `server/llm.py` はこの順に provider を確認します。利用可能 provider は`index/llm_provider_cache.json` に日次 cache されます。
 provider を切り替えたい時は、環境変数を変えたうえで cache file を削除すると確認が早いです。
 
-## SSL_CERT_FILE / REQUESTS_CA_BUNDLE
+## MITM プロキシ配下での TLS 検証
 
-企業 MITM プロキシ (Netskope, Zscaler, Blue Coat など) が TLS を開いて自社 CA で署名し直す環境向けです。
-Python は OS の信頼ストアを直接は見ず、`certifi` 同梱の CA bundle を使うため、社内 CA が certifi に含まれていないと
-OpenAI や GitHub など外部 API への接続が `CERTIFICATE_VERIFY_FAILED: self-signed certificate` で失敗します。
+企業 MITM プロキシ (Netskope, Zscaler, Blue Coat など) が TLS を開いて自社 CA で署名し直す環境では、Python 標準の検証で `CERTIFICATE_VERIFY_FAILED` が出ます。原因は 2 層あります。
 
-対処は、certifi の CA と社内 CA を連結した合成 bundle を用意し、両変数で指すことです。
+1. `certifi` の CA bundle には社内 CA が含まれない
+2. 社内 CA を certifi に連結しても、**OpenSSL 3.x (Python 3.12+) が Basic Constraints の critical フラグを要求**するため、古めの社内 CA は `Basic Constraints of CA cert not marked critical` で弾かれる
 
-```dotenv
-SSL_CERT_FILE=/Users/<you>/.config/ssl/ca-bundle-with-corp.pem
-REQUESTS_CA_BUNDLE=/Users/<you>/.config/ssl/ca-bundle-with-corp.pem
-```
+このため brain では `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE` 方式ではなく、[`truststore`](https://truststore.readthedocs.io/) で **OS の信頼ストア** (macOS Keychain / Linux openssl / Windows SChannel) を使います。`compiler.env.use_system_trust_store()` が CLI と server の起動時に呼ばれ、`ssl` モジュールに OS ストア経由の検証を注入します。
 
-- `SSL_CERT_FILE`: Python 標準 `ssl` モジュールが参照
-- `REQUESTS_CA_BUNDLE`: `requests` / `httpx` 系が参照
+- MITM プロキシを使っていない環境: certifi と同等の挙動
+- MITM プロキシ配下: プロキシ Agent (Netskope Client など) が OS ストアに登録した CA が自動で有効
 
-両方を同じ path に向けるのが安全です。
-合成 bundle の作り方と既知 CA の配布場所 (macOS / Linux) は [instance-setup.md](instance-setup.md) の
-「MITM プロキシ環境の TLS 設定」節を参照してください。
-
-未設定時:
-
-- certifi 同梱の CA bundle のみを信頼する
-- MITM プロキシを挟まない通常のネットワークでは問題なし
-- MITM プロキシ経由では `mise run check-keys-live` / 外部 API 呼び出しが `ERR network: [SSL: CERTIFICATE_VERIFY_FAILED]` になる
-
-切り分けの目安:
-
-- `mise run check-keys` は key の文字列検査のみなので通るが、`mise run check-keys-live` だけ失敗する
-  → ネットワーク経路で TLS が差し替えられている合図
-- `curl -v https://api.openai.com/v1/models` の `issuer` が自社名 / プロキシベンダー名になっている
-  → MITM プロキシ確定
+特別な環境変数は不要です。プロキシ Agent が正しくインストールされていて、OS ストアに社内 CA が入っていれば動きます。うまくいかない場合は [instance-setup.md](instance-setup.md) の「MITM プロキシ環境の TLS 設定」節にある切り分けコマンドを参照してください。
 
 ## check-keys の見方
 

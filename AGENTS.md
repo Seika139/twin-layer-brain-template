@@ -82,7 +82,7 @@ Skill packages live in `.agents/skills/{ingest,query,lint}/` and are shared betw
 - `agents/openai.yaml` — per-skill machine-readable `interface` manifest consumed by Codex (for example `.agents/skills/query/agents/openai.yaml`).
 - `references/` — longer-form notes linked from `SKILL.md`.
 
-Claude Code reaches the same tree via the `.claude/skills → ../.agents/skills` symlink, so changes made under `.agents/` propagate to both runtimes without duplication.
+Claude Code reads the same skill set from `.claude/skills/<name>/`, which is a real-file copy of `.agents/skills/<name>/` (not a symlink — macOS `cp -r` follows symlinks and silently converts them to real files on copy, so symlinks in a template repo are fragile). `.agents/` remains the canonical edit target; after editing run `mise run skills -- sync` to propagate the update into `.claude/` (mtime-based, fzf-confirmed). Use `mise run skills -- diff` to inspect drift.
 
 ### Ingest
 

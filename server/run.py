@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import uvicorn
 
-from compiler.env import load_dotenv
+from compiler.env import load_dotenv, use_system_trust_store
 
+use_system_trust_store()
 load_dotenv()
 
 from compiler.config import SERVER_HOST, SERVER_PORT  # noqa: E402

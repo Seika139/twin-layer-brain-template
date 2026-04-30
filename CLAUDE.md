@@ -122,7 +122,7 @@ Keep Direct Citations optional for other page types — they are worth the maint
 
 ## Operations
 
-Five canonical operations. Each has a dedicated skill package under `.agents/skills/<name>/`, with `.claude/skills` symlinked to that tree so Claude Code resolves the same source-of-truth files. The summaries below are the contract; the SKILL.md files contain the step-by-step recipe.
+Five canonical operations. Each has a dedicated skill package under `.agents/skills/<name>/` — this is the source of truth. Claude Code reads from `.claude/skills/<name>/`, which is a real-file copy of the same tree (not a symlink — macOS `cp -r` follows symlinks and silently breaks copies, so symlinks are avoided). Keep the two trees in sync with `mise run skills -- sync` (mtime-based, fzf-confirmed); use `mise run skills -- diff` to inspect drift. The summaries below are the contract; the SKILL.md files contain the step-by-step recipe.
 
 **Lane structure:** `ingest` grows the wiki from `raw/`. `query` answers from the wiki (wiki-first principle). `sublime` reorganises existing wiki content into canonical homes. `dive` is the deliberate exception lane — it re-reads `raw/` directly when the user already knows the wiki is insufficient, typically for recently updated repos or implementation-level questions. `lint` diagnoses the wiki's health.
 

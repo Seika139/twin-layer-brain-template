@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from compiler.env import load_dotenv
+from compiler.env import load_dotenv, use_system_trust_store
 from compiler.key_check import KeyStatus
 from compiler.paths import BASE_DIR
 
@@ -33,6 +33,7 @@ _HEADING_COLOR = "\033[38;5;221m"
 
 
 def main() -> None:
+    use_system_trust_store()
     load_dotenv()
 
     parser = argparse.ArgumentParser(prog="kc", description="Knowledge Compiler CLI")

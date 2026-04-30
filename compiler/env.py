@@ -5,6 +5,21 @@ import os
 from compiler.paths import BASE_DIR
 
 
+def use_system_trust_store() -> None:
+    """Use the OS trust store (macOS Keychain, Windows cert store, Linux openssl)
+    for TLS verification instead of Python's bundled certifi CA list.
+
+    Required under MITM proxies (Netskope, Zscaler, Blue Coat, ...) whose CA
+    certificates are trusted by the OS but not by certifi, and whose older
+    non-critical Basic Constraints fail OpenSSL 3.x's strict RFC 5280 check
+    when fed via SSL_CERT_FILE. Platforms without a MITM proxy behave
+    equivalently to certifi, so it is safe to call unconditionally.
+    """
+    import truststore
+
+    truststore.inject_into_ssl()
+
+
 def load_dotenv() -> None:
     """Load repo-root .env into os.environ, preferring repo-local values.
 
