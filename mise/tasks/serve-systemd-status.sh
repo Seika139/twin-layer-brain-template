@@ -64,14 +64,23 @@ printf 'restarts  : %s\n' "${n_restarts:-0}"
 printf 'last exit : %s\n' "${exec_status:-(none)}"
 printf 'port      : %s\n' "$PORT"
 
-if curl -sf -m 2 "http://localhost:${PORT}/api/health" >/dev/null; then
-  health_ok=1
-  health_msg="200 OK"
+# service が active でないとき /api/health を叩くと、別 brain が同じ port で
+# 応答している場合に健全と誤診する。active 時だけ health check を行う。
+if [[ "$active_state" == "active" ]]; then
+  if curl -sf -m 2 "http://localhost:${PORT}/api/health" >/dev/null; then
+    health_ok=1
+    health_msg="200 OK"
+  else
+    health_ok=0
+    health_msg="(no response on :${PORT})"
+  fi
 else
   health_ok=0
-  health_msg="(no response on :${PORT})"
+  health_msg="(skipped: service not active)"
 fi
 printf 'health    : %s\n' "$health_msg"
+
+print_port_conflict_if_any "$PORT" "$main_pid"
 
 if [[ "$verbose" != "1" ]]; then
   echo ""
