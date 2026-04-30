@@ -118,6 +118,60 @@ mise run check-keys
 FTS5 のキーワード検索は API key なしで動きます。
 semantic search と Web clip の LLM 要約には provider key が必要です。
 
+## MITM プロキシ環境の TLS 設定
+
+PC に Netskope / Zscaler / Blue Coat などの MITM プロキシが入っている場合、`mise run check-keys-live` や `mise run index` (embedding 生成時) が `CERTIFICATE_VERIFY_FAILED: self-signed certificate` で失敗することがあります。
+Python は OS キーチェーンを見ず `certifi` 同梱の CA bundle を使うため、社内 CA を別途合流させる必要があります。
+
+### 1. 社内 CA 証明書の場所を確認
+
+| プロキシ | macOS での配布場所                                                |
+| -------- | ----------------------------------------------------------------- |
+| Netskope | `/Library/Application Support/Netskope/STAgent/data/nscacert.pem` |
+| Zscaler  | `/Library/Application Support/Zscaler/...` (環境依存)             |
+
+内容を一応確認:
+
+```bash
+openssl x509 -in "/Library/Application Support/Netskope/STAgent/data/nscacert.pem" -noout -subject -issuer -dates
+```
+
+`Subject` に `CN=*Netskope*` (など該当ベンダー名) が入っていて `notAfter` が未来日であれば OK。
+
+### 2. certifi バンドルと合成する
+
+```bash
+# certifi の bundle path を取得
+CERTIFI_PATH=$(uv run python -c "import certifi; print(certifi.where())")
+
+# 合成先を作る
+mkdir -p ~/.config/ssl
+cat "$CERTIFI_PATH" "/Library/Application Support/Netskope/STAgent/data/nscacert.pem" > ~/.config/ssl/ca-bundle-with-corp.pem
+```
+
+社内 CA だけを指すのではなく **certifi と連結** するのが要点です。
+MITM を経由しない通信 (例: PyPI への direct 接続) で信頼ストアが空になるのを防ぎます。
+
+### 3. `.env` に書く
+
+```dotenv
+SSL_CERT_FILE=/Users/<username>/.config/ssl/ca-bundle-with-corp.pem
+REQUESTS_CA_BUNDLE=/Users/<username>/.config/ssl/ca-bundle-with-corp.pem
+```
+
+`<username>` は実パスに置き換えます (`echo $HOME` で確認)。
+
+### 4. 確認
+
+```bash
+mise run check-keys-live
+```
+
+`Chat LLM providers` と `Embedding` がそれぞれ `OK` になれば成功です。
+まだ失敗する場合は、社内 CA が 1 枚ではなく中間 CA を含むケースがあります。情シスが配布する
+PEM ファイル全てを `cat` で連結してください。詳細は [environment.md](environment.md) の
+「SSL_CERT_FILE / REQUESTS_CA_BUNDLE」節を参照。
+
 ## 初回 commit
 
 ```bash
