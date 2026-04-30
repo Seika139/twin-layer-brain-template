@@ -98,7 +98,7 @@ if [[ ! "$BRAIN_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
   exit 2
 fi
 
-echo "[scaffold] Initialising brain in $ROOT_DIR (name: ${BRAIN_NAME})"
+echo "[scaffold] Initializing brain in $ROOT_DIR (name: ${BRAIN_NAME})"
 echo ""
 
 # 1. Empty raw/ content directories (keep the dirs themselves via .gitkeep).
@@ -175,7 +175,7 @@ Entry types: \`ingest\`, \`query\`, \`sublime\`, \`dive\`, \`lint\`, \`refactor\
 
 ---
 
-## [${TODAY}] refactor | initialise brain from template
+## [${TODAY}] refactor | initialize brain from template
 
 - Scaffolded from the twin-layer-brain template.
 - Next: rewrite the Scope line in CLAUDE.md, AGENTS.md, and README.md, then ingest the first source.
