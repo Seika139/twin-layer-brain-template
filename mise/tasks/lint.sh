@@ -27,11 +27,21 @@ rumdl check .
 markdownlint-cli2
 
 if [[ "$all" == "1" ]]; then
-  print_blue "Lint Python files with ruff"$'\n'
+  print_blue "Lint Python files with ruff & mypy"$'\n'
   uv run ruff check compiler server tests mise/tasks/lib
+  uv run mypy
 
-  print_blue "Lint shell scripts with shfmt"$'\n'
+  print_blue "Lint shell scripts with shfmt & shellcheck"$'\n'
   shfmt -d mise/tasks/*.sh mise/tasks/lib/*.sh
+  shellcheck_files=()
+  while IFS= read -r -d '' file; do
+    shellcheck_files+=("$file")
+  done < <(find . -type f \( -name "*.sh" -o -name "*.bash" \) -not -path "./.venv/*" -not -path "./node_modules/*" -not -path "./.git/*" -print0)
+  if [ "${shellcheck_files[0]+_}" ]; then
+    shellcheck -x -P SCRIPTDIR "${shellcheck_files[@]}"
+  else
+    print_red "No shell scripts found; skipping shellcheck."$'\n'
+  fi
 
   print_blue "Lint toml with taplo"$'\n'
   taplo fmt --check --diff

@@ -220,22 +220,22 @@ print_list() {
 
   if [[ -n "$added" ]]; then
     print_blue "追加 (template のみ存在 / 適用時は instance に取り込み):"$'\n'
-    echo "$added" | sed 's/^/  /'
+    echo "  ${added//$'\n'/$'\n'  }"
     echo ""
   fi
   if [[ -n "$modified" ]]; then
     print_blue "変更 (両方にあり内容が異なる / 適用時は template で上書き):"$'\n'
-    echo "$modified" | sed 's/^/  /'
+    echo "  ${modified//$'\n'/$'\n'  }"
     echo ""
   fi
   if [[ -n "$deleted" ]]; then
     print_blue "instance 固有 (instance のみ存在 / 適用時は保護されスキップ):"$'\n'
-    echo "$deleted" | sed 's/^/  /'
+    echo "  ${deleted//$'\n'/$'\n'  }"
     echo ""
   fi
   if [[ -n "$renamed" ]]; then
     print_blue "リネーム (instance-side -> template-side / 適用対象外、手動取り込み):"$'\n'
-    echo "$renamed" | sed 's/^/  /'
+    echo "  ${renamed//$'\n'/$'\n'  }"
     echo ""
   fi
 }

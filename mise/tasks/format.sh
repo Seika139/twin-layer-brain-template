@@ -46,7 +46,9 @@ if [[ "$all" == "1" ]]; then
       col_num="${BASH_REMATCH[3]}"
       message="${BASH_REMATCH[4]}"
       # sed を使って該当行を修正（ここでは単純に行末のスペースを削除する例）
-      sed -i '' "${line_num}s/[[:space:]]\+$//" "$file"
+      # `-i.bak` は BSD/GNU 双方で in-place 編集として動く portable 形式。
+      # `-E` (ERE) で `\+` を `+` に統一し、BSD/GNU 間の正規表現方言差を回避。
+      sed -i.bak -E "${line_num}s/[[:space:]]+$//" "$file" && rm -f "$file.bak"
       print_green "Fixed $file:${line_num}:${col_num}: $message"$'\n'
     fi
   done
