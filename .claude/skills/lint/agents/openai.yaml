@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Lint"
+  short_description: "矛盾・リンク欠落の検出に加えて、Missing pages・Unsourced claims・Follow-up questions を固定 5 セクションで抽出する"
+  default_prompt: "Use this skill to lint wiki/ for consistency, broken [[wiki-links]], missing frontmatter fields, contradictions, stale pages, missing candidate pages, unsourced claims, and follow-up questions. Produce a fixed five-section report (Auto-fixable / Needs review / Missing pages / Unsourced claims / Follow-up questions), always render all five sections even if empty, never auto-fix, and append a lint entry to wiki/log.md."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Sublime"
+  short_description: "散在する知見や snapshot 止まりの analysis を topic / concept / entity へ昇華し、重複する事実を source-summary / entity に還流する"
+  default_prompt: "Use this skill to sublimate scattered or snapshot-bound knowledge into canonical wiki pages. Classify target content into cross-cutting permanent claim (→ wiki/topics/<slug>.md with Core thesis + Direct Citations sections), source-specific permanent fact (→ backflow into wiki/sources/ or wiki/entities/), and time-bound derivation (→ leave in place). Never delete the originating analysis — prepend a canonical-version pointer instead. Update wiki/index.md to route entry points through canonical pages, and append a sublime entry to wiki/log.md."
