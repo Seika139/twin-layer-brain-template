@@ -28,6 +28,8 @@ _STATUS_COLORS = {
 }
 
 _RESET = "\033[0m"
+_SECTION_COLOR = "\033[38;5;208m"
+_HEADING_COLOR = "\033[38;5;221m"
 
 
 def main() -> None:
@@ -310,21 +312,21 @@ def _format_check_keys_human(
 ) -> str:
     active_chat = [s.provider for s in statuses if s.is_usable()]
     lines = [
-        "API key check / APIキー確認",
+        _section_heading("API key check / APIキー確認", use_color=use_color),
         "",
-        "Summary / 概要",
+        _section_heading("Summary / 概要", use_color=use_color),
         f"  Chat LLM        : {_chat_summary(active_chat)}",
         f"  Semantic search : {_semantic_search_summary(embedding_status)}",
         f"  Embedding probe : {_embedding_probe_summary(embedding_status)}",
         "",
-        "Chat providers",
-        _format_key_status_header(),
+        _section_heading("Chat providers", use_color=use_color),
+        _format_key_status_header(use_color=use_color),
     ]
     lines.extend(_format_key_status(s, use_color=use_color) for s in statuses)
 
     lines.append("")
-    lines.append("Embedding")
-    lines.append(_format_key_status_header())
+    lines.append(_section_heading("Embedding", use_color=use_color))
+    lines.append(_format_key_status_header(use_color=use_color))
     lines.append(_format_key_status(embedding_status, use_color=use_color))
     lines.extend(_embedding_help_lines(embedding_status))
 
@@ -353,8 +355,11 @@ def _format_key_status(
     )
 
 
-def _format_key_status_header() -> str:
-    return f"  {'Status':<7}  {'Provider':<12} {'Env var':<18} {'Key':<12} Result"
+def _format_key_status_header(use_color: bool) -> str:
+    header = f"  {'Status':<7}  {'Provider':<12} {'Env var':<18} {'Key':<12} Result"
+    if use_color:
+        header = f"{_HEADING_COLOR}{header}{_RESET}"
+    return header
 
 
 def _chat_summary(active_chat: list[str]) -> str:
@@ -424,6 +429,12 @@ def _colorize(status: str, value: str) -> str:
     if color is None:
         return value
     return f"{color}{value}{_RESET}"
+
+
+def _section_heading(title: str, *, use_color: bool) -> str:
+    if not use_color:
+        return title
+    return f"{_SECTION_COLOR}{title}{_RESET}"
 
 
 def _cmd_suggest_related(args: argparse.Namespace) -> None:
