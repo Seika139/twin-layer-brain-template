@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 #MISE description="ingest 用に GitHub repo を raw/repos/ へ clone し、repos.json に記録する（引数: <owner>/<repo> [branch]）"
+#MISE quiet=true
 
 set -euo pipefail
 
@@ -14,6 +15,10 @@ BRANCH="${2:-}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MANIFEST_HELPER="$ROOT_DIR/mise/tasks/lib/repos_manifest.py"
+
+cd "$ROOT_DIR"
+# shellcheck disable=SC1091
+source "$ROOT_DIR/mise/tasks/common.sh"
 
 # spec から URL と repo 名を導出する。
 # "owner/repo" 形式と "git@github.com:owner/repo.git" / "https://..." 形式の両方に対応。
@@ -29,9 +34,11 @@ TARGET_DIR="$ROOT_DIR/raw/repos/$NAME"
 mkdir -p "$ROOT_DIR/raw/repos"
 
 if [[ -d "$TARGET_DIR/.git" ]]; then
-  echo "[skip] $NAME は既に $TARGET_DIR に clone 済みです"
+  print_dim "[skip] "
+  echo "$NAME は既に $TARGET_DIR に clone 済みです"
 else
-  echo "[clone] $URL -> $TARGET_DIR"
+  print_blue "[clone] "
+  echo "$URL -> $TARGET_DIR"
   if [[ -n "$BRANCH" ]]; then
     git clone --branch "$BRANCH" --single-branch "$URL" "$TARGET_DIR"
   else
