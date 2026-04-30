@@ -44,6 +44,15 @@ wrapper は実行時に OS を判定します。
 
 `serve-status` はデフォルトで state / pid / restarts / last exit / port / `/api/health` の要約のみ表示します。`launchctl print` や `systemctl status` の生出力を見たい場合は `mise run serve-status -v` (または `--verbose`) で切り替えられます。
 
+service が active でない / running でないときは `/api/health` を叩きません。別 brain が同じ
+`BRAIN_PORT` で listen していると、止まっている service なのに health が 200 を返す誤診を
+起こすためです。health 欄は `(skipped: service not active)` のように skip 理由を表示します。
+
+port を別プロセスが保持していて service が bind できない場合、`serve-status` は
+`conflict : port :NNNNN は別プロセス pid N が保持しています (cwd: ...)` と表示します。
+兄弟 brain が同じ `BRAIN_PORT` を使っているときに即座に検知できます。別プロセスを止めるか、
+`.env` の `BRAIN_PORT` を変更して `mise run serve-restart` を実行してください。
+
 service が running / active かつ `/api/health` が 200 を返したときに exit 0、それ以外 (未登録 / failed / health 失敗) は non-zero で抜けるので、CI / readiness gate からも利用できます。
 
 | OS    | wrapper の内部処理       |
