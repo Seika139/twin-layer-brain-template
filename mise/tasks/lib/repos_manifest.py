@@ -27,6 +27,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 
 def _brain_root() -> Path:
@@ -58,7 +59,7 @@ def _derive_name(spec: str) -> str:
     return s.rsplit("/", 1)[-1]
 
 
-def _load() -> dict:
+def _load() -> dict[str, Any]:
     path = _manifest_path()
     if not path.exists():
         return {"repos": []}
@@ -75,7 +76,7 @@ def _load() -> dict:
     return data
 
 
-def _save(data: dict) -> None:
+def _save(data: dict[str, Any]) -> None:
     path = _manifest_path()
     tmp = path.with_suffix(".json.tmp")
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
@@ -92,7 +93,7 @@ def cmd_add(args: argparse.Namespace) -> int:
         entry["branch"] = args.branch
     if args.name:
         entry["name"] = args.name
-    repos: list[dict] = data["repos"]
+    repos: list[dict[str, Any]] = data["repos"]
     for i, existing in enumerate(repos):
         existing_name = existing.get("name") or _derive_name(existing.get("spec", ""))
         if existing_name == name:
@@ -164,7 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     p_dn.set_defaults(func=cmd_derive_name)
 
     args = parser.parse_args(argv)
-    return args.func(args)
+    return cast(int, args.func(args))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 
-import httpx
+import httpx as httpx
 
 from compiler.config import OPENAI_MODEL
 

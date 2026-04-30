@@ -29,7 +29,7 @@ markdownlint-cli2
 if [[ "$all" == "1" ]]; then
   print_blue "Lint Python files with ruff & mypy"$'\n'
   uv run ruff check compiler server tests mise/tasks/lib
-  uv run mypy
+  uv run mypy compiler server tests mise/tasks/lib
 
   print_blue "Lint shell scripts with shfmt & shellcheck"$'\n'
   shfmt -d mise/tasks/*.sh mise/tasks/lib/*.sh

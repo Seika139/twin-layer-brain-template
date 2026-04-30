@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+import os as os
 
 from compiler.paths import BASE_DIR
 

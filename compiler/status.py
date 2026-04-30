@@ -12,6 +12,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import sqlite_vec
 
@@ -129,7 +130,7 @@ def format_human(status: IndexStatus) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _count(conn: sqlite3.Connection, query: str, params: tuple = ()) -> int:
+def _count(conn: sqlite3.Connection, query: str, params: tuple[Any, ...] = ()) -> int:
     row = conn.execute(query, params).fetchone()
     return int(row[0]) if row and row[0] is not None else 0
 

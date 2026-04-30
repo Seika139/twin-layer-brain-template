@@ -6,7 +6,7 @@ import re
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import frontmatter
@@ -80,9 +80,8 @@ async def clip(req: ClipRequest, background_tasks: BackgroundTasks) -> ClipRespo
 
     llm_used = bool(summary or llm_tags)
     capture_mode: Literal["ai", "mechanical"] = "ai" if llm_used else "mechanical"
-    existing_tags = (
-        existing.get("tags") if isinstance(existing.get("tags"), list) else []
-    )
+    existing_tags_raw = existing.get("tags")
+    existing_tags = existing_tags_raw if isinstance(existing_tags_raw, list) else []
     all_tags = list(dict.fromkeys(existing_tags + req.tags + llm_tags + ["web-clip"]))
 
     body_parts = []
@@ -215,7 +214,7 @@ def _find_existing_clip(
     return None
 
 
-def _read_existing_metadata(filepath: Path) -> dict[str, object]:
+def _read_existing_metadata(filepath: Path) -> dict[str, Any]:
     if not filepath.exists():
         return {}
     try:
