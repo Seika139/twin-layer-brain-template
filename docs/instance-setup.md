@@ -17,7 +17,7 @@ mkdir -p ~/programs/brains
 cp -r ~/programs/brains/twin-layer-brain-template \
   ~/programs/brains/twin-layer-brain-<topic>
 cd ~/programs/brains/twin-layer-brain-<topic>
-rm -rf .git
+rm -rf .git/ .venv/ index/ node_modules/
 git init
 ```
 
@@ -33,12 +33,13 @@ cd ~/programs/brains/twin-layer-brain-<topic>
 ## 依存を入れる
 
 ```bash
+mise trust -a
 mise install
-uv sync
-pnpm install
+mise run init
 ```
 
 `mise` が Python / Node / uv / pnpm / rumdl などを揃えます。
+`init` はさらに必要ディレクトリを作り、依存同期と `kc index` を実行します。
 
 ## instance を空の brain として初期化する
 
@@ -46,12 +47,10 @@ pnpm install
 mise run scaffold-brain                    # 対話で brain name を聞く
 # あるいは
 mise run scaffold-brain -- -n my-brain     # name を明示
-mise run init
 ```
 
 `scaffold-brain` は inherited content を消し、`wiki/index.md` と `wiki/log.md` を初期化します。
 加えて brain name を受け取り、**`pyproject.toml` の `project.name` と `chrome-extension/manifest.json` の `"name"` に代入、`version` は両方とも `0.0.0`** にリセットします。
-`init` は必要ディレクトリを作り、依存同期と `kc index` を実行します。
 
 引数なしで実行した場合、TTY では repo dir 名をデフォルト値としてプロンプトを出します。
 非対話 (CI / pipe) では `-n <name>` 必須でエラーにします。name に使える文字は `A-Z a-z 0-9 . _ -` だけです (PEP 508 project.name と同じ制約)。
