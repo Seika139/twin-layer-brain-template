@@ -1,0 +1,58 @@
+---
+version: 2
+
+# プライベートリポジトリの認証設定
+registries:
+  github-private:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: ${{secrets.PUSH_AND_RUN_WORKFLOW_TOKEN}}
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "Asia/Tokyo"
+    # release 直後の地雷を避けるため 7 日間の cooldown を設ける
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-deps:
+        patterns:
+          - "*"
+
+  # package.json + pnpm-lock.yaml を追従する。
+  # ecosystem は "npm" 指定で pnpm-lock.yaml も対象になる（2024 以降ネイティブ対応）。
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "Asia/Tokyo"
+    cooldown:
+      default-days: 7
+    groups:
+      npm-deps:
+        patterns:
+          - "*"
+
+  # pyproject.toml + uv.lock を追従する。
+  # "pip" ではなく "uv" を指定することで uv.lock も更新される（2025 GA）。
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "Asia/Tokyo"
+    cooldown:
+      default-days: 7
+    groups:
+      uv-deps:
+        patterns:
+          - "*"
