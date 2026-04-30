@@ -72,6 +72,11 @@ template remote と自 instance の差分を表示 / 適用します。
   M (両方に存在し内容が異なる): template の内容で上書き
   A (template のみに存在):      template から取り込み (instance に追加)
   D (instance のみに存在):      スキップ (instance 固有の拡張として保護)
+
+pyproject.toml は半特例:
+  [project] の name と version は instance 固有なので保持し、それ以外は
+  template に追従。name/version 以外に差分が無い場合は list / diff /
+  apply のいずれにも現れない (=ノイズ抑止)。
 EOF
     exit 0
     ;;
@@ -165,6 +170,11 @@ HEAD_REF="HEAD"
 
 # instance 固有 path (既定では除外)。
 # --all を付けると比較対象に含める。
+#
+# pyproject.toml はこのリストには **載せない**。`[project]` の name と
+# version だけは instance 固有 (= 追従させない)、それ以外は template に
+# 追従させたいため、pathspec の二値判断ではなく後段の smart-merge
+# (pyproject_apply_target / strip_pyproject_noise) で処理する。
 INSTANCE_PATHSPEC=(
   ':(exclude).github/workflows/**'
   ':(exclude)chrome-extension/icon48.png'
@@ -183,7 +193,6 @@ INSTANCE_PATHSPEC=(
   ':(exclude)AGENTS.md'
   ':(exclude)CHANGELOG.md'
   ':(exclude)CLAUDE.md'
-  ':(exclude)pyproject.toml'
   ':(exclude)repos.json'
   ':(exclude)README.md'
   ':(exclude)uv.lock'
@@ -200,6 +209,72 @@ if [[ "$INCLUDE_INSTANCE" -eq 0 ]]; then
   echo "(instance 固有 path は除外。--all で含める)"
 fi
 echo ""
+
+# ─── pyproject.toml smart-merge helpers ───────────────────────────
+# pyproject.toml は template に追従したいが [project] の name と version
+# だけは instance ごとに固有。よって pathspec で丸ごと除外せず、ここで
+# 「name/version は保持・残りは template 追従」を実現する。
+#
+# `pyproject_apply_target` が「適用後あるべき姿」を生成する一次資料。
+# list / diff / apply のいずれもこれを基準に判断するため、3 レーンで
+# 挙動が乖離しない。
+
+# instance / template の双方に pyproject.toml が存在し、smart-merge を
+# 試みられる状態か。片方しか存在しない場合は通常の git 差分処理に任せる。
+pyproject_smart_eligible() {
+  [[ -f pyproject.toml ]] && git cat-file -e "$BASE_REF:pyproject.toml" 2>/dev/null
+}
+
+# `[project]` テーブル内の `<field> = "..."` 値だけを取り出す。
+# 他テーブル ([tool.foo] 等) に同名キーがあっても無視する。
+pyproject_project_field() {
+  local field="$1" file="$2"
+  awk -v f="$field" '
+    /^\[project\]/ { in_project=1; next }
+    /^\[/          { in_project=0; next }
+    in_project && $0 ~ "^"f" *= *\"" {
+      if (match($0, /"[^"]*"/)) {
+        print substr($0, RSTART+1, RLENGTH-2)
+        exit
+      }
+    }
+  ' "$file"
+}
+
+# template の pyproject.toml に instance の name/version を差し戻した
+# 「適用後あるべき姿」を stdout に書き出す。
+pyproject_apply_target() {
+  local instance_name instance_version
+  instance_name=$(pyproject_project_field name pyproject.toml)
+  instance_version=$(pyproject_project_field version pyproject.toml)
+
+  git show "$BASE_REF:pyproject.toml" |
+    awk -v n="$instance_name" -v v="$instance_version" '
+      /^\[project\]/ { in_project=1; print; next }
+      /^\[/          { in_project=0; print; next }
+      in_project && /^name *= *"/    { print "name = \"" n "\""; next }
+      in_project && /^version *= *"/ { print "version = \"" v "\""; next }
+      { print }
+    '
+}
+
+# instance の pyproject.toml と「適用後あるべき姿」が異なるか。
+# 異なる = name/version 以外に追従すべき差分が残っている = 実差分あり。
+pyproject_has_real_diff() {
+  pyproject_smart_eligible || return 1
+  ! diff -q pyproject.toml <(pyproject_apply_target) >/dev/null 2>&1
+}
+
+# 変更ファイル一覧 (`git diff --name-status` 形式) から、name/version
+# 以外に実差分が無い場合の pyproject.toml 行を取り除く。
+strip_pyproject_noise() {
+  local input="$1"
+  if pyproject_smart_eligible && ! pyproject_has_real_diff; then
+    awk -F'\t' '$2 != "pyproject.toml"' <<<"$input"
+  else
+    printf '%s\n' "$input"
+  fi
+}
 
 # 変更ファイルを `A`, `M`, `D`, `R...` 別に集計する共通関数。
 # diff の方向は HEAD..BASE (= instance..template)。
@@ -245,6 +320,7 @@ print_list() {
 case "$MODE" in
 list)
   CHANGED_FILES="$(collect_changed_files)"
+  CHANGED_FILES="$(strip_pyproject_noise "$CHANGED_FILES")"
   if [[ -z "$CHANGED_FILES" ]]; then
     echo "差分はありません。"
     exit 0
@@ -259,10 +335,23 @@ list)
 EOF
   ;;
 diff)
-  git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${PATHSPEC[@]}"
+  # pyproject.toml は smart-merge で扱うため、git diff からは除外して
+  # 後段で「name/version を保持した状態の」差分を別途出す。
+  diff_pathspec=("${PATHSPEC[@]}")
+  if pyproject_smart_eligible; then
+    diff_pathspec+=(':(exclude)pyproject.toml')
+  fi
+  git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${diff_pathspec[@]}"
+  if pyproject_has_real_diff; then
+    echo ""
+    print_blue "--- pyproject.toml smart diff (name/version は instance を保持) ---"$'\n'
+    diff -u --label "a/pyproject.toml" --label "b/pyproject.toml" \
+      pyproject.toml <(pyproject_apply_target) || true
+  fi
   ;;
 apply)
   CHANGED_FILES="$(collect_changed_files)"
+  CHANGED_FILES="$(strip_pyproject_noise "$CHANGED_FILES")"
   if [[ -z "$CHANGED_FILES" ]]; then
     print_blue "差分はありません。適用する変更はありません。"$'\n'
     exit 0
@@ -340,7 +429,26 @@ EOF
   if [[ "$SKIP_CONFIRM" -eq 0 ]]; then
     echo "--- 以下の差分を template の内容で上書きします (+ が apply 後の内容) ---"
     echo ""
-    git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${to_overwrite[@]}"
+    # pyproject.toml は smart-merge 対象なので、git diff からは外して
+    # 後で「name/version 保持後の真の差分」を別途見せる。
+    overwrite_for_diff=()
+    overwrite_has_pyproject=0
+    for p in "${to_overwrite[@]}"; do
+      if [[ "$p" == "pyproject.toml" ]] && pyproject_smart_eligible; then
+        overwrite_has_pyproject=1
+      else
+        overwrite_for_diff+=("$p")
+      fi
+    done
+    if [[ ${#overwrite_for_diff[@]} -gt 0 ]]; then
+      git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${overwrite_for_diff[@]}"
+    fi
+    if [[ "$overwrite_has_pyproject" -eq 1 ]]; then
+      echo ""
+      print_blue "--- pyproject.toml smart diff (name/version は instance を保持) ---"$'\n'
+      diff -u --label "a/pyproject.toml" --label "b/pyproject.toml" \
+        pyproject.toml <(pyproject_apply_target) || true
+    fi
     echo ""
     print_blue "コミット済みの独自編集は git reflog で復旧可能ですが、未コミットの WIP は復旧できません。"$'\n'
     echo ""
@@ -367,9 +475,21 @@ EOF
   # 各 path を template の内容で上書きする。
   # git checkout <ref> -- <path> は存在しないファイルも復元するため、
   # M (変更) と D (削除) を同じ操作で処理できる。
+  # ただし pyproject.toml は smart-merge: template の内容に instance の
+  # [project] name/version を差し戻したものを working tree に書き出す。
+  # (git checkout だと name/version まで template 値で上書きされてしまう)
   failed=()
   for path in "${to_overwrite[@]}"; do
-    if git checkout "$BASE_REF" -- "$path" 2>/dev/null; then
+    if [[ "$path" == "pyproject.toml" ]] && pyproject_smart_eligible; then
+      tmp="pyproject.toml.diff-template.tmp"
+      if pyproject_apply_target >"$tmp" && mv "$tmp" pyproject.toml; then
+        print_blue "  [適用] $path (name/version は instance 値を保持)"$'\n'
+      else
+        rm -f "$tmp"
+        print_red "  [失敗] $path"$'\n'
+        failed+=("$path")
+      fi
+    elif git checkout "$BASE_REF" -- "$path" 2>/dev/null; then
       print_blue "  [適用] $path"$'\n'
     else
       print_red "  [失敗] $path"$'\n'
