@@ -43,12 +43,37 @@ pnpm install
 ## instance を空の brain として初期化する
 
 ```bash
-mise run scaffold-brain
+mise run scaffold-brain                    # 対話で brain name を聞く
+# あるいは
+mise run scaffold-brain -- -n my-brain     # name を明示
 mise run init
 ```
 
-`scaffold-brain` は inherited content を消し、`wiki/index.md` と `wiki/log.md` を
-初期化します。`init` は必要ディレクトリを作り、依存同期と `kc index` を実行します。
+`scaffold-brain` は inherited content を消し、`wiki/index.md` と `wiki/log.md` を初期化します。
+加えて brain name を受け取り、**`pyproject.toml` の `project.name` と `chrome-extension/manifest.json` の `"name"` に代入、`version` は両方とも `0.0.0`** にリセットします。
+`init` は必要ディレクトリを作り、依存同期と `kc index` を実行します。
+
+引数なしで実行した場合、TTY では repo dir 名をデフォルト値としてプロンプトを出します。
+非対話 (CI / pipe) では `-n <name>` 必須でエラーにします。name に使える文字は `A-Z a-z 0-9 . _ -` だけです (PEP 508 project.name と同じ制約)。
+
+`scaffold-brain` は `.env` が無ければ `.env.example` から生成し、`15200` から順に **OS 上で未使用の port を探して `BRAIN_PORT`** に設定します (同一 PC に複数 brain を置いても衝突しない)。手動で変更したい場合は `.env` を直接編集します。
+
+chrome-extension のアイコン色を brain ごとに分けたい場合は、scaffold 時に `SCAFFOLD_ICON_COLOR=#RRGGBB` を渡します。ティール面だけが指定色に差し替わり、白文字と黒輪郭は保たれます。
+
+```bash
+SCAFFOLD_ICON_COLOR=#7b1fa2 mise run scaffold-brain
+```
+
+未指定ならテンプレのティールのままです。
+後からアイコンだけ塗り直したい場合は `mise run recolor-icon` を使います。
+引数なしで実行すると鮮やかな色を自動生成します(元のティールには被らない)。
+
+```bash
+mise run recolor-icon                      # ランダム色を生成して適用
+mise run recolor-icon -- '#ef6c00'         # 色を明示
+```
+
+ランダム生成時は `[recolor-icon] random target color: #XXXXXX` が表示されるので、気に入った色はメモしておくと別 brain にも再利用できます。
 
 ## Scope を書く
 
@@ -74,8 +99,7 @@ This brain covers: 仕事全般
 
 ## .env を設定する
 
-必要に応じて `.env.example` をコピーします。REST API や Chrome extension を使う場合は、
-`reset-token` で `BRAIN_API_TOKEN` を作成します。
+必要に応じて `.env.example` をコピーします。REST API や Chrome extension を使う場合は、`reset-token` で `BRAIN_API_TOKEN` を作成します。
 
 ```bash
 cp .env.example .env
@@ -120,8 +144,11 @@ mise run serve-status
 ```
 
 `serve-install` は OS を自動判定します。macOS では launchd、Linux / WSL では systemd --user を使います。
-同じマシンに複数 instance を置く場合は、`.env` の `BRAIN_PORT` を instance ごとに変えてください。
 詳しい常駐運用は [server-management.md](server-management.md) を参照してください。
+
+`BRAIN_PORT` は `scaffold-brain` 時点で空き port が自動割り当て済みです (前節参照)。
+衝突した場合は `mise run serve-status` が占有プロセスの pid と cwd を表示します。
+必要に応じて `.env` を編集してから `mise run serve-restart` を実行してください。
 
 VPS で root 管理の system service として運用する場合は、`sudo ./deploy/setup.sh <install-dir>` で
 systemd unit を作り、`systemctl start/restart/status <service-name>` を使います。
