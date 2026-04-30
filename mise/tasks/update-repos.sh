@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 #MISE description="repos.json に従って raw/repos/ を同期する（未 clone は clone、既存は git pull --ff-only、--prune で孤立 repo を退避）"
+#MISE quiet=true
 
 set -euo pipefail
 
@@ -8,6 +9,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MANIFEST_HELPER="$ROOT_DIR/mise/tasks/lib/repos_manifest.py"
 REPOS_DIR="$ROOT_DIR/raw/repos"
 TRASH_DIR="$REPOS_DIR/.trash"
+
+cd "$ROOT_DIR"
+# shellcheck disable=SC1091
+source "$ROOT_DIR/mise/tasks/common.sh"
 
 PRUNE=0
 for arg in "$@"; do
@@ -24,8 +29,7 @@ repos.json に従って raw/repos/ 配下を同期します。
   - マニフェストにあるが未 clone の repo を clone する。
   - 既存 repo は git pull --ff-only で更新する。
   - マニフェストに載っていない repo (orphan) を一覧表示する。
-  - --prune を付けると orphan を raw/repos/.trash/ に退避し、最終削除用の
-    rm コマンドを stdout に表示する。
+  - --prune を付けると orphan を raw/repos/.trash/ に退避し、最終削除用の rm コマンドを stdout に表示する。
 EOF
     exit 0
     ;;
@@ -48,6 +52,7 @@ failed=()
 while IFS=$'\t' read -r NAME SPEC BRANCH; do
   [[ -z "$NAME" ]] && continue
   TARGET="$REPOS_DIR/$NAME"
+  print_blue "Processing $NAME ..."$'\n'
 
   if [[ "$SPEC" == git@* || "$SPEC" == https://* || "$SPEC" == ssh://* ]]; then
     URL="$SPEC"
@@ -56,7 +61,8 @@ while IFS=$'\t' read -r NAME SPEC BRANCH; do
   fi
 
   if [[ ! -d "$TARGET/.git" ]]; then
-    echo "[clone] $NAME ($URL)"
+    print_blue "[clone] "
+    echo "$NAME ($URL)"
     if [[ -n "$BRANCH" ]]; then
       if git clone --branch "$BRANCH" --single-branch "$URL" "$TARGET" >/dev/null 2>&1; then
         cloned+=("$NAME")
@@ -94,7 +100,7 @@ while IFS= read -r name; do
 done < <(BRAIN_ROOT="$ROOT_DIR" python3 "$MANIFEST_HELPER" orphans)
 
 # 3. 結果を表示する。
-echo "=== update-repos ==="
+print_blue $'\n'"=== update-repos ==="$'\n'
 echo "clone 済み: ${#cloned[@]}${cloned[*]:+ (${cloned[*]})}"
 echo "更新あり:   ${#updated[@]}${updated[*]:+ (${updated[*]})}"
 echo "更新なし:   ${#unchanged[@]}"
