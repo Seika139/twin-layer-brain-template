@@ -39,7 +39,7 @@ python_version = "3.12"
 strict = true
 
 [[tool.mypy.overrides]]
-module = ["frontmatter", "sqlite_vec", "PIL"]
+module = ["frontmatter", "sqlite_vec", "PIL", "truststore"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
