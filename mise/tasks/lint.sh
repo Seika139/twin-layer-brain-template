@@ -36,7 +36,7 @@ if [[ "$all" == "1" ]]; then
   shellcheck_files=()
   while IFS= read -r -d '' file; do
     shellcheck_files+=("$file")
-  done < <(find . -type f \( -name "*.sh" -o -name "*.bash" \) -not -path "./.venv/*" -not -path "./node_modules/*" -not -path "./.git/*" -print0)
+    done < <(find . -type f \( -name "*.sh" -o -name "*.bash" \) -not -path "./.venv/*" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./raw/*" -not -path "./tmp/*" -not -path "./.serena/*" -print0)
   if [ "${shellcheck_files[0]+_}" ]; then
     shellcheck -x -P SCRIPTDIR "${shellcheck_files[@]}"
   else
