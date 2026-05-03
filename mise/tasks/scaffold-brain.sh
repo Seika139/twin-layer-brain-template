@@ -25,6 +25,10 @@
 # What it does:
 #   - Removes all files under raw/{notes,articles,assets}/ and
 #     wiki/{sources,entities,concepts,topics,analyses}/ except .gitkeep markers.
+#   - Preserves the LLM Wiki founding-document seed
+#     (raw/articles/2026-04-04-karpathy-llm-wiki.md) as a worked example of
+#     the source format. Delete it manually if your brain's topic doesn't
+#     warrant carrying it.
 #   - Rewrites wiki/index.md and wiki/log.md to empty frontmatter-only form.
 #   - Sets pyproject.toml / manifest.json の name = <brain name>, version = 0.0.0.
 #   - Leaves CLAUDE.md, AGENTS.md, README.md, docs/, the skill packages,
@@ -110,12 +114,30 @@ echo "[scaffold] Initializing brain in $ROOT_DIR (name: ${BRAIN_NAME})"
 echo ""
 
 # 1. Empty raw/ content directories (keep the dirs themselves via .gitkeep).
-for d in raw/notes raw/articles raw/assets; do
+#    raw/articles/ additionally preserves the LLM Wiki founding-document
+#    seed shipped with the template — kept as a worked example of the
+#    source-page format. Listed here so the carve-out is visible at the
+#    one place that matters.
+TEMPLATE_SEED_ARTICLE="2026-04-04-karpathy-llm-wiki.md"
+
+for d in raw/notes raw/assets; do
   if [[ -d "$ROOT_DIR/$d" ]]; then
     find "$ROOT_DIR/$d" -mindepth 1 ! -name '.gitkeep' -delete
     echo "  - emptied $d/"
   fi
 done
+
+if [[ -d "$ROOT_DIR/raw/articles" ]]; then
+  find "$ROOT_DIR/raw/articles" -mindepth 1 \
+    ! -name '.gitkeep' \
+    ! -name "$TEMPLATE_SEED_ARTICLE" \
+    -delete
+  if [[ -f "$ROOT_DIR/raw/articles/$TEMPLATE_SEED_ARTICLE" ]]; then
+    echo "  - emptied raw/articles/ (kept template seed: $TEMPLATE_SEED_ARTICLE)"
+  else
+    echo "  - emptied raw/articles/"
+  fi
+fi
 
 # 2. Empty wiki/ content directories.
 for d in wiki/sources wiki/entities wiki/concepts wiki/topics wiki/analyses; do

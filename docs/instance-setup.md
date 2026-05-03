@@ -53,6 +53,11 @@ mise run scaffold-brain -- -n my-brain     # name を明示
 `scaffold-brain` は inherited content を消し、`wiki/index.md` と `wiki/log.md` を初期化します。
 加えて brain name を受け取り、**`pyproject.toml` の `project.name` と `chrome-extension/manifest.json` の `"name"` に代入、`version` は両方とも `0.0.0`** にリセットします。
 
+例外として、`raw/articles/2026-04-04-karpathy-llm-wiki.md` は **template seed** として保護されます。これは LLM Wiki パターンの founding document（karpathy の gist）の verbatim snapshot で、source ページ書式の worked example および link rot 対策のリファレンスとして残してあります。
+
+- そのまま keep: clone した brain の topic が knowledge engineering 系なら `/ingest` で wiki/sources/ に展開できる
+- 不要なら削除: `rm raw/articles/2026-04-04-karpathy-llm-wiki.md` の 1 行で消える（他に依存ファイルなし）
+
 引数なしで実行した場合、TTY では repo dir 名をデフォルト値としてプロンプトを出します。
 非対話 (CI / pipe) では `-n <name>` 必須でエラーにします。name に使える文字は `A-Z a-z 0-9 . _ -` だけです (PEP 508 project.name と同じ制約)。
 
