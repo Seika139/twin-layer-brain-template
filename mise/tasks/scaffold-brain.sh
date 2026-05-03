@@ -31,6 +31,7 @@
 #     warrant carrying it.
 #   - Rewrites wiki/index.md and wiki/log.md to empty frontmatter-only form.
 #   - Sets pyproject.toml / manifest.json の name = <brain name>, version = 0.0.0.
+#   - Stamps chrome-extension/popup.html の <h1> を brain name に書き換える。
 #   - Leaves CLAUDE.md, AGENTS.md, README.md, docs/, the skill packages,
 #     and compiler/server infra untouched (you edit the Scope line in
 #     CLAUDE.md, AGENTS.md, and README.md by hand).
@@ -267,6 +268,14 @@ if [[ -f "$MANIFEST" ]]; then
     '^[[:space:]]*"version"[[:space:]]*:' \
     '  "version": "0.0.0",'
   echo "  - stamped chrome-extension/manifest.json (name=${BRAIN_NAME}, version=0.0.0)"
+fi
+
+POPUP="$ROOT_DIR/chrome-extension/popup.html"
+if [[ -f "$POPUP" ]]; then
+  rewrite_line_in_place "$POPUP" \
+    '^[[:space:]]*<h1>[^<]*</h1>[[:space:]]*$' \
+    "    <h1>${BRAIN_NAME}</h1>"
+  echo "  - stamped chrome-extension/popup.html (<h1>=${BRAIN_NAME})"
 fi
 
 # 5. Pick a free BRAIN_PORT so this brain doesn't collide with siblings already
