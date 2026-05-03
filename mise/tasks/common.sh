@@ -51,3 +51,22 @@ binary_choice() {
   fi
   echo "$res" | grep -iq "^yes$"
 }
+
+# ─── .env パース ────────────────────────────────────
+# `source .env` を避けるのは、.env がシェル特殊文字を含んでも安全に値だけ
+# 取り出すため。コメント行（`# KEY=...`）はマッチしない。前後空白と外側の
+# 引用符（' / "）は剥がして返す。値が見つからない場合は空文字列（exit 0）。
+# 使い方: value="$(read_env_value KEY "$ROOT_DIR/.env")"
+read_env_value() {
+  local key="$1" file="$2"
+  [[ -f "$file" ]] || return 0
+  awk -F= -v key="$key" '
+    $0 ~ "^[[:space:]]*"key"[[:space:]]*=" {
+      sub("^[[:space:]]*"key"[[:space:]]*=[[:space:]]*", "")
+      sub(/[[:space:]]+$/, "")
+      gsub(/^["'\'']|["'\'']$/, "")
+      print
+      exit
+    }
+  ' "$file"
+}
