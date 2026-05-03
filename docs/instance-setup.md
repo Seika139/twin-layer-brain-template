@@ -10,24 +10,25 @@
 - 公開 / 非公開の境界は repo 単位で分ける
 - `raw/` と `wiki/` が正本、`index/` は再生成可能な派生物
 
-## ローカルコピーで作る
+## ローカルの twin-layer-brain-template をコピーで作る
 
 ```bash
-mkdir -p ~/programs/brains
-cp -r ~/programs/brains/twin-layer-brain-template \
-  ~/programs/brains/twin-layer-brain-<topic>
-cd ~/programs/brains/twin-layer-brain-<topic>
-rm -rf .git/ .venv/ index/ node_modules/
+copy_repo_name="twin-layer-brain-topic" # 新しいリポジトリの名前にする
+brains_root_dir=~/programs/brains # 親ディレクトリ（クォートしない / 末尾スラッシュなし）
+mkdir -p "${brains_root_dir}"
+cp -r "${brains_root_dir}/twin-layer-brain-template" "${brains_root_dir}/${copy_repo_name}"
+cd "${brains_root_dir}/${copy_repo_name}"
+rm -rf .git node_modules .venv .pytest_cache .ruff_cache .rumdl_cache
 git init
 ```
 
 ## GitHub template repo から作る
 
+事前に `.env` の `COPY_REPO_OWNER` と `BRAINS_ROOT_DIR` を設定しておきます（`.env.example` 参照）。
+
 ```bash
-gh repo create <owner>/twin-layer-brain-<topic> --private \
-  --template=<owner>/twin-layer-brain-template
-git -C ~/programs/brains clone git@github.com:<owner>/twin-layer-brain-<topic>.git
-cd ~/programs/brains/twin-layer-brain-<topic>
+mise run copy-from-template                            # TTY: 対話で repo 名を入力
+mise run copy-from-template -- --name=twin-layer-brain-<topic>
 ```
 
 ## 依存を入れる
