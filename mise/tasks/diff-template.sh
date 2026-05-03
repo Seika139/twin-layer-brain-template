@@ -276,6 +276,69 @@ strip_pyproject_noise() {
   fi
 }
 
+# ─── chrome-extension/popup.html smart-merge helpers ──────────────
+# popup.html は template の UI / popup ロジックには追従したいが、
+# <h1>...</h1> の中身だけは scaffold-brain で brain name に書き換え
+# られているため (= instance 固有)、追従させたくない。pyproject.toml
+# の smart-merge と同じ "instance 値を保持・残りは template 追従"
+# パターンで処理する。
+
+POPUP_HTML_PATH="chrome-extension/popup.html"
+
+popup_smart_eligible() {
+  [[ -f "$POPUP_HTML_PATH" ]] && git cat-file -e "$BASE_REF:$POPUP_HTML_PATH" 2>/dev/null
+}
+
+# 引数のファイルから最初の <h1>...</h1> の中身だけを取り出す。
+popup_h1_inner() {
+  awk '
+    match($0, /<h1>[^<]*<\/h1>/) {
+      s = substr($0, RSTART, RLENGTH)
+      sub(/^<h1>/, "", s)
+      sub(/<\/h1>$/, "", s)
+      print s
+      exit
+    }
+  ' "$1"
+}
+
+# template の popup.html に instance の <h1> 中身を差し戻した
+# 「適用後あるべき姿」を stdout に書き出す。
+popup_apply_target() {
+  local instance_h1
+  instance_h1=$(popup_h1_inner "$POPUP_HTML_PATH")
+
+  git show "$BASE_REF:$POPUP_HTML_PATH" |
+    awk -v h1="$instance_h1" '
+      !done && match($0, /<h1>[^<]*<\/h1>/) {
+        before = substr($0, 1, RSTART - 1)
+        after  = substr($0, RSTART + RLENGTH)
+        print before "<h1>" h1 "</h1>" after
+        done = 1
+        next
+      }
+      { print }
+    '
+}
+
+# instance の popup.html と「適用後あるべき姿」が異なるか。
+# 異なる = <h1> 以外に追従すべき差分が残っている = 実差分あり。
+popup_has_real_diff() {
+  popup_smart_eligible || return 1
+  ! diff -q "$POPUP_HTML_PATH" <(popup_apply_target) >/dev/null 2>&1
+}
+
+# 変更ファイル一覧から、<h1> 以外に実差分が無い場合の popup.html
+# 行を取り除く。
+strip_popup_noise() {
+  local input="$1"
+  if popup_smart_eligible && ! popup_has_real_diff; then
+    awk -F'\t' -v p="$POPUP_HTML_PATH" '$2 != p' <<<"$input"
+  else
+    printf '%s\n' "$input"
+  fi
+}
+
 # 変更ファイルを `A`, `M`, `D`, `R...` 別に集計する共通関数。
 # diff の方向は HEAD..BASE (= instance..template)。
 # `+` が「apply で手元に来る内容」、`-` が「apply で消える内容」と読めるよう揃えてある。
@@ -321,6 +384,7 @@ case "$MODE" in
 list)
   CHANGED_FILES="$(collect_changed_files)"
   CHANGED_FILES="$(strip_pyproject_noise "$CHANGED_FILES")"
+  CHANGED_FILES="$(strip_popup_noise "$CHANGED_FILES")"
   if [[ -z "$CHANGED_FILES" ]]; then
     echo "差分はありません。"
     exit 0
@@ -335,11 +399,14 @@ list)
 EOF
   ;;
 diff)
-  # pyproject.toml は smart-merge で扱うため、git diff からは除外して
-  # 後段で「name/version を保持した状態の」差分を別途出す。
+  # pyproject.toml と popup.html は smart-merge で扱うため、git diff
+  # からは除外して、後段で「instance 値を保持した状態の」差分を別途出す。
   diff_pathspec=("${PATHSPEC[@]}")
   if pyproject_smart_eligible; then
     diff_pathspec+=(':(exclude)pyproject.toml')
+  fi
+  if popup_smart_eligible; then
+    diff_pathspec+=(":(exclude)$POPUP_HTML_PATH")
   fi
   git --no-pager diff "$HEAD_REF".."$BASE_REF" -- "${diff_pathspec[@]}"
   if pyproject_has_real_diff; then
@@ -348,10 +415,17 @@ diff)
     diff -u --label "a/pyproject.toml" --label "b/pyproject.toml" \
       pyproject.toml <(pyproject_apply_target) || true
   fi
+  if popup_has_real_diff; then
+    echo ""
+    print_blue "--- $POPUP_HTML_PATH smart diff (<h1> は instance を保持) ---"$'\n'
+    diff -u --label "a/$POPUP_HTML_PATH" --label "b/$POPUP_HTML_PATH" \
+      "$POPUP_HTML_PATH" <(popup_apply_target) || true
+  fi
   ;;
 apply)
   CHANGED_FILES="$(collect_changed_files)"
   CHANGED_FILES="$(strip_pyproject_noise "$CHANGED_FILES")"
+  CHANGED_FILES="$(strip_popup_noise "$CHANGED_FILES")"
   if [[ -z "$CHANGED_FILES" ]]; then
     print_blue "差分はありません。適用する変更はありません。"$'\n'
     exit 0
@@ -429,13 +503,16 @@ EOF
   if [[ "$SKIP_CONFIRM" -eq 0 ]]; then
     echo "--- 以下の差分を template の内容で上書きします (+ が apply 後の内容) ---"
     echo ""
-    # pyproject.toml は smart-merge 対象なので、git diff からは外して
-    # 後で「name/version 保持後の真の差分」を別途見せる。
+    # pyproject.toml と popup.html は smart-merge 対象なので、git diff
+    # からは外して、後で「instance 値保持後の真の差分」を別途見せる。
     overwrite_for_diff=()
     overwrite_has_pyproject=0
+    overwrite_has_popup=0
     for p in "${to_overwrite[@]}"; do
       if [[ "$p" == "pyproject.toml" ]] && pyproject_smart_eligible; then
         overwrite_has_pyproject=1
+      elif [[ "$p" == "$POPUP_HTML_PATH" ]] && popup_smart_eligible; then
+        overwrite_has_popup=1
       else
         overwrite_for_diff+=("$p")
       fi
@@ -448,6 +525,12 @@ EOF
       print_blue "--- pyproject.toml smart diff (name/version は instance を保持) ---"$'\n'
       diff -u --label "a/pyproject.toml" --label "b/pyproject.toml" \
         pyproject.toml <(pyproject_apply_target) || true
+    fi
+    if [[ "$overwrite_has_popup" -eq 1 ]]; then
+      echo ""
+      print_blue "--- $POPUP_HTML_PATH smart diff (<h1> は instance を保持) ---"$'\n'
+      diff -u --label "a/$POPUP_HTML_PATH" --label "b/$POPUP_HTML_PATH" \
+        "$POPUP_HTML_PATH" <(popup_apply_target) || true
     fi
     echo ""
     print_blue "コミット済みの独自編集は git reflog で復旧可能ですが、未コミットの WIP は復旧できません。"$'\n'
@@ -475,15 +558,26 @@ EOF
   # 各 path を template の内容で上書きする。
   # git checkout <ref> -- <path> は存在しないファイルも復元するため、
   # M (変更) と D (削除) を同じ操作で処理できる。
-  # ただし pyproject.toml は smart-merge: template の内容に instance の
-  # [project] name/version を差し戻したものを working tree に書き出す。
-  # (git checkout だと name/version まで template 値で上書きされてしまう)
+  # ただし以下の 2 ファイルは smart-merge:
+  #   - pyproject.toml: template の内容に instance の [project] name/version
+  #     を差し戻したものを working tree に書き出す
+  #   - popup.html: template の内容に instance の <h1> 中身を差し戻す
+  # (git checkout だと instance 固有値まで template 値で上書きされてしまう)
   failed=()
   for path in "${to_overwrite[@]}"; do
     if [[ "$path" == "pyproject.toml" ]] && pyproject_smart_eligible; then
       tmp="pyproject.toml.diff-template.tmp"
       if pyproject_apply_target >"$tmp" && mv "$tmp" pyproject.toml; then
         print_blue "  [適用] $path (name/version は instance 値を保持)"$'\n'
+      else
+        rm -f "$tmp"
+        print_red "  [失敗] $path"$'\n'
+        failed+=("$path")
+      fi
+    elif [[ "$path" == "$POPUP_HTML_PATH" ]] && popup_smart_eligible; then
+      tmp="$POPUP_HTML_PATH.diff-template.tmp"
+      if popup_apply_target >"$tmp" && mv "$tmp" "$POPUP_HTML_PATH"; then
+        print_blue "  [適用] $path (<h1> は instance 値を保持)"$'\n'
       else
         rm -f "$tmp"
         print_red "  [失敗] $path"$'\n'
