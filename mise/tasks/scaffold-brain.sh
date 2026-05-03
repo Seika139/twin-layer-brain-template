@@ -42,8 +42,12 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/server.sh"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BASENAME="$(basename "$ROOT_DIR")"
 
+# shellcheck disable=SC1091
+source "$ROOT_DIR/mise/tasks/common.sh"
+
 if [[ "$BASENAME" == "twin-layer-brain-template" && "${FORCE:-}" != "1" ]]; then
-  echo "[refuse] Running in the template repo ($BASENAME)." >&2
+  print_red "[refuse] "
+  echo "Running in the template repo ($BASENAME)." >&2
   echo "         scaffold-brain is for freshly cloned derivative brains." >&2
   echo "         If you really mean it, re-run with FORCE=1." >&2
   exit 2
@@ -55,7 +59,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
   -n | --name)
     if [[ $# -lt 2 ]]; then
-      echo "[scaffold] $1 に値がありません" >&2
+      print_red "[scaffold] "
+      echo "$1 に値がありません" >&2
       exit 2
     fi
     BRAIN_NAME_ARG="$2"
@@ -66,7 +71,8 @@ while [[ $# -gt 0 ]]; do
     exit 0
     ;;
   *)
-    echo "[scaffold] unknown argument: $1" >&2
+    print_red "[scaffold] "
+    echo "unknown argument: $1" >&2
     echo "usage: mise run scaffold-brain -- [-n <name>]" >&2
     exit 2
     ;;
@@ -84,7 +90,8 @@ elif [[ -t 0 ]]; then
   read -r -p "brain name [${DEFAULT_NAME}]: " BRAIN_NAME
   BRAIN_NAME="${BRAIN_NAME:-$DEFAULT_NAME}"
 else
-  echo "[scaffold] brain name が指定されていません。" >&2
+  print_red "[scaffold] "
+  echo "brain name が指定されていません。" >&2
   echo "           対話実行するか、-n <name> で明示的に指定してください。" >&2
   echo "           例: mise run scaffold-brain -- -n my-brain" >&2
   exit 2
@@ -93,7 +100,8 @@ fi
 # PEP 508 project.name と chrome manifest の両方で安全な文字集合に絞る。
 # 空白や記号が入ると TOML/JSON の quote を壊したり systemd unit 名と衝突する。
 if [[ ! "$BRAIN_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
-  echo "[scaffold] 不正な brain name: ${BRAIN_NAME}" >&2
+  print_red "[scaffold] "
+  echo "不正な brain name: ${BRAIN_NAME}" >&2
   echo "           使用可能な文字: A-Z a-z 0-9 . _ -" >&2
   exit 2
 fi
@@ -194,7 +202,8 @@ for f in CLAUDE.md AGENTS.md README.md; do
   fi
 done
 if ((${#remaining[@]} > 0)); then
-  echo "[warn] Scope placeholder still present in: ${remaining[*]}" >&2
+  print_orange "[warn] "
+  echo "Scope placeholder still present in: ${remaining[*]}" >&2
   echo "       Open each file and replace the placeholder with this brain's scope." >&2
   echo ""
 fi
@@ -297,10 +306,12 @@ if [[ -n "${SCAFFOLD_ICON_COLOR:-}" ]]; then
           "${existing_icons[@]}"; then
           echo "  - recolored chrome-extension icons to $SCAFFOLD_ICON_COLOR"
         else
-          echo "[warn] アイコンの recolor に失敗しました。SCAFFOLD_ICON_COLOR の値を確認してください。" >&2
+          print_orange "[warn] "
+          echo "アイコンの recolor に失敗しました。SCAFFOLD_ICON_COLOR の値を確認してください。" >&2
         fi
       else
-        echo "[warn] uv が見つからないため SCAFFOLD_ICON_COLOR を適用できませんでした。" >&2
+        print_orange "[warn] "
+        echo "uv が見つからないため SCAFFOLD_ICON_COLOR を適用できませんでした。" >&2
       fi
     fi
   fi
