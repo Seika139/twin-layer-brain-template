@@ -41,7 +41,8 @@ while [[ $# -gt 0 ]]; do
     ;;
   --name)
     if [[ $# -lt 2 ]]; then
-      echo "[copy-from-template] $1 に値がありません" >&2
+      print_red "[copy-from-template] "
+      echo "$1 に値がありません" >&2
       exit 2
     fi
     COPY_REPO_NAME="$2"
@@ -52,7 +53,8 @@ while [[ $# -gt 0 ]]; do
     exit 0
     ;;
   *)
-    echo "[copy-from-template] unknown argument: $1" >&2
+    print_red "[copy-from-template] "
+    echo "unknown argument: $1" >&2
     echo "usage: mise run copy-from-template -- [--name=<name>]" >&2
     exit 2
     ;;
@@ -61,13 +63,15 @@ done
 
 # --- Validate defaults --------------------------------------------------------
 if [[ -z "$COPY_REPO_OWNER" ]]; then
-  echo "[copy-from-template] COPY_REPO_OWNER が未設定です。" >&2
+  print_red "[copy-from-template] "
+  echo "COPY_REPO_OWNER が未設定です。" >&2
   echo "                     .env に COPY_REPO_OWNER=<github-owner> を追加してください。" >&2
   exit 2
 fi
 
 if [[ -z "$BRAINS_ROOT_DIR" ]]; then
-  echo "[copy-from-template] BRAINS_ROOT_DIR が未設定です。" >&2
+  print_red "[copy-from-template] "
+  echo "BRAINS_ROOT_DIR が未設定です。" >&2
   echo "                     .env に BRAINS_ROOT_DIR=<path> を追加してください（例: ~/programs/brains）。" >&2
   exit 2
 fi
@@ -77,7 +81,8 @@ fi
 BRAINS_ROOT_DIR="${BRAINS_ROOT_DIR/#\~/$HOME}"
 
 if [[ ! -d "$BRAINS_ROOT_DIR" ]]; then
-  echo "[copy-from-template] BRAINS_ROOT_DIR が存在しません: $BRAINS_ROOT_DIR" >&2
+  print_red "[copy-from-template] "
+  echo "BRAINS_ROOT_DIR が存在しません: $BRAINS_ROOT_DIR" >&2
   echo "                     先に \`mkdir -p $BRAINS_ROOT_DIR\` してください。" >&2
   exit 2
 fi
@@ -87,27 +92,31 @@ if [[ -z "$COPY_REPO_NAME" ]]; then
   if [[ -t 0 ]]; then
     read -r -p "copy repo name (例: twin-layer-brain-<topic>): " COPY_REPO_NAME
   else
-    echo "[copy-from-template] copy repo name が指定されていません。" >&2
+    print_red "[copy-from-template] "
+    echo "copy repo name が指定されていません。" >&2
     echo "                     対話実行するか、--name=<name> で明示してください。" >&2
     exit 2
   fi
 fi
 
 if [[ -z "$COPY_REPO_NAME" ]]; then
-  echo "[copy-from-template] 空の repo 名は使えません。" >&2
+  print_red "[copy-from-template] "
+  echo "空の repo 名は使えません。" >&2
   exit 2
 fi
 
 # GitHub の repo 名と systemd / launchd の unit 名で安全な文字集合に絞る。
 if [[ ! "$COPY_REPO_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
-  echo "[copy-from-template] 不正な repo 名: ${COPY_REPO_NAME}" >&2
+  print_red "[copy-from-template] "
+  echo "不正な repo 名: ${COPY_REPO_NAME}" >&2
   echo "                     使用可能な文字: A-Z a-z 0-9 . _ -" >&2
   exit 2
 fi
 
 TARGET_DIR="${BRAINS_ROOT_DIR}/${COPY_REPO_NAME}"
 if [[ -e "$TARGET_DIR" ]]; then
-  echo "[copy-from-template] 既に存在します: $TARGET_DIR" >&2
+  print_red "[copy-from-template] "
+  echo "既に存在します: $TARGET_DIR" >&2
   echo "                     別の名前を指定するか、既存ディレクトリを退避してください。" >&2
   exit 2
 fi
@@ -121,6 +130,10 @@ gh repo create "${COPY_REPO_OWNER}/${COPY_REPO_NAME}" --private \
 print_blue "[clone] "
 echo "git@github.com:${COPY_REPO_OWNER}/${COPY_REPO_NAME}.git -> ${TARGET_DIR}"
 git -C "${BRAINS_ROOT_DIR}" clone "git@github.com:${COPY_REPO_OWNER}/${COPY_REPO_NAME}.git"
+
+print_blue "[add template] "
+echo "git remote add template git@github.com:${COPY_REPO_OWNER}/twin-layer-brain-template.git"
+git remote add template "git@github.com:${COPY_REPO_OWNER}/twin-layer-brain-template.git"
 
 echo ""
 echo "次のステップ:"
