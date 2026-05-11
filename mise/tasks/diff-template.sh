@@ -176,7 +176,7 @@ HEAD_REF="HEAD"
 # 追従させたいため、pathspec の二値判断ではなく後段の smart-merge
 # (pyproject_apply_target / strip_pyproject_noise) で処理する。
 INSTANCE_PATHSPEC=(
-  ':(exclude).github/workflows/**'
+  ':(exclude).github/**'
   ':(exclude)chrome-extension/icon48.png'
   ':(exclude)chrome-extension/icon128.png'
   ':(exclude)chrome-extension/manifest.json'
