@@ -93,14 +93,47 @@ listener_cwd_for_pid() {
   fi
 }
 
-# listener pid が service の MainPID と食い違っていたら警告行を出力する。
-# 一致 / listener 不在 / service_pid 不明のときは何も出さない。
+# listener pid が指定の service unit に属しているかを判定する。
+# unit 識別子は Linux なら systemd unit 名 (例: local.tlb-spark.service)、
+# macOS なら launchd label (例: local.tlb-spark)。
+# 属している → 0、属していない / 判定不能 → 非ゼロ。
+#
+# wrapper (mise → sh → uv → python) を挟むと service の MainPID と
+# bind 主の pid が一致しないため、pid 直接比較ではなく所属判定で見る。
+pid_belongs_to_service() {
+  local pid="$1" unit="$2"
+  [[ -n "$pid" && -n "$unit" ]] || return 1
+  if [[ -r "/proc/${pid}/cgroup" ]]; then
+    # systemd: cgroup path の末尾に unit 名が現れる。
+    grep -qE "(^|/)${unit}\$|(^|/)${unit}/" "/proc/${pid}/cgroup" 2>/dev/null
+    return $?
+  fi
+  if command -v launchctl >/dev/null 2>&1; then
+    # launchd: procinfo に "service name = <label>" 行が出る。
+    local svc
+    svc="$(launchctl procinfo "$pid" 2>/dev/null |
+      awk -F'=' '
+        /^[[:space:]]*service name[[:space:]]*=/ {
+          sub(/^[^=]*=[[:space:]]*/, "")
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "")
+          print
+          exit
+        }
+      ')"
+    [[ "$svc" == "$unit" ]]
+    return $?
+  fi
+  return 1
+}
+
+# listener pid が当該 service unit 配下にいなければ警告行を出力する。
+# listener 不在 / 自分の unit 配下のときは何も出さない。
 print_port_conflict_if_any() {
-  local port="$1" service_pid="$2"
+  local port="$1" unit="$2"
   local listener_pid listener_cwd
   listener_pid="$(listener_pid_for_port "$port")"
   [[ -n "$listener_pid" ]] || return 0
-  [[ "$listener_pid" == "$service_pid" ]] && return 0
+  pid_belongs_to_service "$listener_pid" "$unit" && return 0
   listener_cwd="$(listener_cwd_for_pid "$listener_pid")"
   printf 'conflict  : port :%s は別プロセス pid %s が保持しています' \
     "$port" "$listener_pid"
