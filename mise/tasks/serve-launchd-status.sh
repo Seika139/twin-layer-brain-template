@@ -77,7 +77,7 @@ else
 fi
 printf 'health    : %s\n' "$health_msg"
 
-print_port_conflict_if_any "$PORT" "$pid"
+print_port_conflict_if_any "$PORT" "$LABEL"
 
 if [[ "$verbose" != "1" ]]; then
   echo ""
