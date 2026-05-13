@@ -80,7 +80,7 @@ else
 fi
 printf 'health    : %s\n' "$health_msg"
 
-print_port_conflict_if_any "$PORT" "$main_pid"
+print_port_conflict_if_any "$PORT" "${SERVICE}.service"
 
 if [[ "$verbose" != "1" ]]; then
   echo ""
