@@ -89,6 +89,31 @@
         color: #991b1b;
       }
 
+      .token-badge {
+        margin: 0 0 10px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        line-height: 1.4;
+        background: #f1f5f9;
+        color: #475569;
+      }
+
+      .token-badge.ok {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .token-badge.warn {
+        background: #fef9c3;
+        color: #854d0e;
+      }
+
+      .token-badge.error {
+        background: #fef2f2;
+        color: #991b1b;
+      }
+
       .settings-link {
         display: block;
         margin-top: 8px;
@@ -194,6 +219,8 @@
 
   <body>
     <h1>Twin Layer Brain Clipper</h1>
+
+    <div id="token-status" class="token-badge">接続を確認中...</div>
 
     <label for="title">Title</label> <input type="text" id="title" />
 
