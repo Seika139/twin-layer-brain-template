@@ -121,7 +121,7 @@ async function handleClip() {
   btn.disabled = true;
   btn.textContent = "Saving...";
   statusEl.className = "status";
-  statusEl.style.display = "";
+  statusEl.textContent = "";
 
   const settings = await chrome.storage.local.get(["endpoint", "token"]);
   const endpoint = (settings.endpoint || DEFAULT_ENDPOINT).replace(/\/+$/, "");
