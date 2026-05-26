@@ -53,7 +53,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("content").value = result.result.content;
     }
     if (result?.result?.canonicalUrl) {
-      document.getElementById("canonical-url").value = result.result.canonicalUrl;
+      document.getElementById("canonical-url").value =
+        result.result.canonicalUrl;
     }
   } catch {
     // content script may not be injected (e.g. chrome:// pages)
@@ -72,7 +73,47 @@ document.addEventListener("DOMContentLoaded", async () => {
     .addEventListener("change", async (event) => {
       await chrome.storage.local.set({ useLlm: event.target.checked });
     });
+
+  refreshTokenBadge();
 });
+
+async function fetchAuthStatus(endpoint, token) {
+  if (!endpoint) return { kind: "warn", message: "API Endpoint 未設定" };
+  if (!token) return { kind: "warn", message: "Bearer Token 未設定" };
+
+  try {
+    const res = await fetch(`${endpoint}/api/auth/check`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) return { kind: "ok", message: "接続 OK / token 有効" };
+    if (res.status === 401)
+      return { kind: "error", message: "401: Authorization header 不正" };
+    if (res.status === 403)
+      return { kind: "error", message: "403: token 不一致" };
+    if (res.status === 503)
+      return { kind: "error", message: "503: server 側 token 未設定" };
+    const text = await res.text();
+    return { kind: "error", message: `${res.status}: ${text}` };
+  } catch (err) {
+    return { kind: "error", message: `接続失敗: ${err.message}` };
+  }
+}
+
+async function refreshTokenBadge() {
+  const badge = document.getElementById("token-status");
+  const settings = await chrome.storage.local.get(["endpoint", "token"]);
+  const endpoint = (settings.endpoint || DEFAULT_ENDPOINT).replace(/\/+$/, "");
+  const token = settings.token || "";
+
+  badge.className = "token-badge";
+  badge.textContent = "接続を確認中...";
+
+  const status = await fetchAuthStatus(endpoint, token);
+  badge.className = `token-badge ${status.kind}`;
+  badge.textContent = status.message;
+}
 
 async function handleClip() {
   const btn = document.getElementById("clip");
@@ -141,7 +182,8 @@ async function handleClip() {
     }
 
     const result = await res.json();
-    const mode = result.capture_mode === "ai" ? "AI summary" : "mechanical text";
+    const mode =
+      result.capture_mode === "ai" ? "AI summary" : "mechanical text";
     showStatus("success", `Clipped with ${mode}`);
     setTimeout(() => window.close(), 1200);
   } catch (err) {
@@ -166,6 +208,7 @@ async function saveSettings() {
   const useLlm = document.getElementById("use-llm").checked;
   await chrome.storage.local.set({ endpoint, token, useLlm });
   showStatus("success", "Settings saved");
+  refreshTokenBadge();
 }
 
 async function checkToken() {
@@ -185,35 +228,12 @@ async function checkToken() {
     return;
   }
 
-  try {
-    const res = await fetch(`${endpoint}/api/auth/check`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.ok) {
-      await chrome.storage.local.set({ endpoint, token });
-      showStatus("success", "接続できました。token は有効です。");
-      return;
-    }
-
-    if (res.status === 401) {
-      showStatus(
-        "error",
-        "Authorization header がありません。token を確認してください。",
-      );
-    } else if (res.status === 403) {
-      showStatus(
-        "error",
-        "token が一致しません。reset-token 後の値を貼ってください。",
-      );
-    } else if (res.status === 503) {
-      showStatus("error", "server 側に BRAIN_API_TOKEN が設定されていません。");
-    } else {
-      const text = await res.text();
-      showStatus("error", `${res.status}: ${text}`);
-    }
-  } catch (err) {
-    showStatus("error", `server に接続できません: ${err.message}`);
+  const status = await fetchAuthStatus(endpoint, token);
+  if (status.kind === "ok") {
+    await chrome.storage.local.set({ endpoint, token });
+    showStatus("success", "接続できました。token は有効です。");
+  } else {
+    showStatus("error", status.message);
   }
+  refreshTokenBadge();
 }
