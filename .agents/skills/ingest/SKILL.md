@@ -25,7 +25,7 @@ Bring a new source into the wiki following the karpathy pattern.
 Before writing *any* file, present to the user:
 
 - "This source's core claims are: [a], [b], [c]."
-- "Related existing pages I'd update: [[page1]], [[page2]]."
+- "Related existing pages I'd update: \[[page1]\], \[[page2]\]."
 - "Should I emphasize anything specific?"
 
 Wait for the user's steer. **Do not start writing after listing takeaways without confirmation** unless the user has pre-authorized.
@@ -45,10 +45,7 @@ tags: [<tag1>, <tag2>]
 ---
 ```
 
-> **YAML 予約文字の注意**: `title: \`foo\`` のように先頭にバッククォートを置くと
-> `yaml.scanner.ScannerError` で `kc index` が該当ファイルをスキップする。
-> 記号を含むタイトルは必ず `title: "`foo` は bar"` のようにダブルクォートで囲む。
-> 書いた後に `mise run validate` で機械的に検証できる。
+> **YAML 予約文字の注意**: `title: \`foo\``のように先頭にバッククォートを置くと`yaml.scanner.ScannerError`で`kc index`が該当ファイルをスキップする。 記号を含むタイトルは必ず`title: "`foo` は bar"`のようにダブルクォートで囲む。 書いた後に`mise run validate\` で機械的に検証できる。
 
 Body structure:
 
@@ -75,7 +72,7 @@ If the new source contradicts an existing page:
 - **Do not silently overwrite.**
 - Keep the old claim, mark it with `> **Superseded by [[sources/<new>]]:** <one-line reason>`.
 - Add a `> **Contradiction:**` block to both pages pointing at each other.
-- Surface this to the user in chat: "Found a contradiction between [[A]] and [[B]] — flagged both, needs your judgment."
+- Surface this to the user in chat: "Found a contradiction between \[[A]\] and \[[B]\] — flagged both, needs your judgment."
 
 ### 6. Update `wiki/index.md`
 

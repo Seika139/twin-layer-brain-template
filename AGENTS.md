@@ -6,7 +6,7 @@ Based on karpathy's "LLM Wiki" pattern: <https://gist.github.com/karpathy/442a6b
 
 ## Scope
 
-This brain covers: **<このブレインが扱う範囲を 1 行で書き換える>**
+This brain covers: **\<このブレインが扱う範囲を 1 行で書き換える>**
 
 One brain = one topic. Separate repos for separate concerns (work project / side domain / personal). See `README.md` and `docs/instance-setup.md` for the template workflow.
 

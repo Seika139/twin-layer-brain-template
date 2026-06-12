@@ -25,12 +25,12 @@ MCP server は、LLM client から Layer 1 の検索や Markdown note 操作を�
 
 ## MCP と REST API の違い
 
-| 観点       | MCP                                            | REST API                                           |
-| ---------- | ---------------------------------------------- | -------------------------------------------------- |
-| 主な利用者 | LLM client / agent                             | 人間、script、外部 app                             |
-| 呼び方     | tool call                                      | HTTP request                                       |
-| 代表入口   | `search_notes`, `read_note`, `rebuild_index`   | `GET /api/notes/search`, `POST /api/index/rebuild` |
-| 目的       | agent が作業中に検索・読み取り・補助操作を行う | CLI 以外のプログラムから API として使う            |
+| 観点       | MCP                                                                    | REST API                                                    |
+| ---------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 主な利用者 | LLM client / agent                                                     | 人間、script、外部 app                                      |
+| 呼び方     | tool call                                                              | HTTP request                                                |
+| 代表入口   | `search_notes`, `read_note`, `rebuild_index`                           | `GET /api/notes/search`, `POST /api/index/rebuild`          |
+| 目的       | agent が作業中に検索・読み取り・補助操作を行う                         | CLI 以外のプログラムから API として使う                     |
 | 認証       | 既定は token なし。`BRAIN_MCP_REQUIRE_TOKEN=true` で Bearer token 必須 | `/api/notes/*`, `/api/index/*`, `/api/clip` は Bearer token |
 
 MCP は agent 向けの tool interface です。

@@ -2,13 +2,13 @@
 
 LLM Wiki 側の主な操作は 5 つです。
 
-| 操作 | 使う場面 | 主な出力 |
-|---|---|---|
-| `ingest` | 新しいソースを取り込む | `wiki/sources/` と関連ページ更新 |
-| `query` | wiki に質問する | チャット回答、必要なら analysis / canonical page |
-| `sublime` | 散在する知見を恒久ページへ昇華する | `wiki/topics/` など |
-| `dive` | `raw/` を直接深掘りする | file:line citation 付き回答 |
-| `lint` | wiki の健康診断をする | 5 セクションの診断 |
+| 操作      | 使う場面                           | 主な出力                                         |
+| --------- | ---------------------------------- | ------------------------------------------------ |
+| `ingest`  | 新しいソースを取り込む             | `wiki/sources/` と関連ページ更新                 |
+| `query`   | wiki に質問する                    | チャット回答、必要なら analysis / canonical page |
+| `sublime` | 散在する知見を恒久ページへ昇華する | `wiki/topics/` など                              |
+| `dive`    | `raw/` を直接深掘りする            | file:line citation 付き回答                      |
+| `lint`    | wiki の健康診断をする              | 5 セクションの診断                               |
 
 ## Query
 

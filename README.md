@@ -3,7 +3,7 @@
 `twin-layer-brain-template` は、作業領域やプロジェクトごとにコピーして使う個人用 Second Brain テンプレートです。
 1 つのコピーを 1 つのトピックに割り当て、`raw/` と `wiki/` の Markdown を正本として育てます。
 
-> **Scope of this brain:** <ここにこのブレインが扱う範囲を 1 行で書き換える>
+> **Scope of this brain:** \<ここにこのブレインが扱う範囲を 1 行で書き換える>
 >
 > One brain = one topic. 別の作業領域やプロジェクトは、別コピーとして運用します。
 

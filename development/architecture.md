@@ -82,10 +82,10 @@ SQL スキーマでは表現できない。
 
 twin-layer-brain は同じ Markdown 正本に対して**2 つの検索能力の層**を提供する:
 
-| 層 | 実装 | 強み | 用途 |
-|----|------|------|------|
-| **Layer 1** | SQLite (FTS5 + sqlite-vec) | 網羅性、低レイテンシ | 「X について何か書いたっけ」 |
-| **Layer 2** | LLM が育てる `[[wiki-link]]` グラフ | 合成知識、解釈の深さ | 「X と Y の関係を整理して」 |
+| 層          | 実装                                | 強み                 | 用途                         |
+| ----------- | ----------------------------------- | -------------------- | ---------------------------- |
+| **Layer 1** | SQLite (FTS5 + sqlite-vec)          | 網羅性、低レイテンシ | 「X について何か書いたっけ」 |
+| **Layer 2** | LLM が育てる `[[wiki-link]]` グラフ | 合成知識、解釈の深さ | 「X と Y の関係を整理して」  |
 
 `layer` は**物理ディレクトリの層ではなく capability の層**。両層とも同じ Markdown
 を対象に、違うアクセスパターンを提供する。ディレクトリは `raw/` + `wiki/` の 1 層。
@@ -113,13 +113,13 @@ twin-layer-brain は同じ Markdown 正本に対して**2 つの検索能力の�
 
 ### 5 operation と 2 層の協調
 
-| Skill | 主な Layer | Layer 1 の補助 |
-|-------|-----------|---------------|
-| `ingest` | Layer 2 (raw 読取 → wiki 書込) | 書込後に `kc index` で再索引 |
-| `query` | Layer 2 (wiki/index.md → page) | **冒頭で FTS / embedding 検索、候補を絞り込む** |
-| `sublime` | Layer 2 (analyses → topic) | 再索引 |
-| `dive` | Layer 2 (raw 直読) | 候補 raw ファイルの FTS 検索 |
-| `lint` | Layer 2 (wiki 通読) | orphan 検出、被参照数集計 |
+| Skill     | 主な Layer                     | Layer 1 の補助                                  |
+| --------- | ------------------------------ | ----------------------------------------------- |
+| `ingest`  | Layer 2 (raw 読取 → wiki 書込) | 書込後に `kc index` で再索引                    |
+| `query`   | Layer 2 (wiki/index.md → page) | **冒頭で FTS / embedding 検索、候補を絞り込む** |
+| `sublime` | Layer 2 (analyses → topic)     | 再索引                                          |
+| `dive`    | Layer 2 (raw 直読)             | 候補 raw ファイルの FTS 検索                    |
+| `lint`    | Layer 2 (wiki 通読)            | orphan 検出、被参照数集計                       |
 
 ### MCP のツール構成 (2 階層)
 

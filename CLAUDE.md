@@ -4,7 +4,7 @@ Operating schema for the LLM agent maintaining this **twin-layer-brain**. Based 
 
 ## Scope
 
-This brain covers: **<このブレインが扱う範囲を 1 行で書き換える>**
+This brain covers: **\<このブレインが扱う範囲を 1 行で書き換える>**
 
 One brain = one topic. For a different topic — another work project, a side domain, a separate machine — spin up a new repo from this template. Keeping brains narrow keeps the `[[wiki-link]]` graph dense and prevents sensitive material from leaking across domains. See `README.md` and `docs/instance-setup.md` for the template workflow.
 
@@ -27,7 +27,7 @@ One flat tier. Public/private is decided per repository — this template stays 
 | `raw/articles/`  | tracked       | user  | web clippings, downloaded PDFs, papers.                                                                                                                                                                       |
 | `raw/assets/`    | tracked       | user  | images, diagrams, screenshots.                                                                                                                                                                                |
 | `raw/repos/`     | **ignored**   | user  | cloned source repositories (nested `.git`, large, licensed separately, reproducible from upstream). Which repos belong here is recorded in the tracked `repos.json`.                                          |
-| `repos.json`     | tracked       | user  | manifest of repos that should be cloned into `raw/repos/`. `mise run clone-repo` appends to it; `mise run update-repos` reconstructs `raw/repos/` from it on every machine.                                    |
+| `repos.json`     | tracked       | user  | manifest of repos that should be cloned into `raw/repos/`. `mise run clone-repo` appends to it; `mise run update-repos` reconstructs `raw/repos/` from it on every machine.                                   |
 | `wiki/index.md`  | tracked       | LLM   | catalog of all wiki pages. Always kept current.                                                                                                                                                               |
 | `wiki/log.md`    | tracked       | LLM   | chronological, append-only record of ingests / queries / lint passes / refactors.                                                                                                                             |
 | `wiki/sources/`  | tracked       | LLM   | one file per ingested source, summarizing it and linking back to `raw/`.                                                                                                                                      |
@@ -136,7 +136,7 @@ Triggered when the user adds a source to `raw/` and asks to ingest.
 2. Discuss 2-3 key takeaways with the user _in chat_ before writing.
 3. Create `wiki/sources/YYYY-MM-DD-<slug>.md` with citations back to specific sections/files.
 4. Propagate outward: update / create relevant `entities/`, `concepts/`, and `topics/` pages. Add cross-references. If a new source refines the stable takeaway of an existing topic, update that topic.
-5. On contradiction with existing pages: do **not** silently overwrite. Keep both, mark the older as "Superseded by [[source]]", and surface to user.
+5. On contradiction with existing pages: do **not** silently overwrite. Keep both, mark the older as "Superseded by \[[source]\]", and surface to user.
 6. Update `wiki/index.md` to list new/modified pages.
 7. Append an entry to `wiki/log.md`.
 

@@ -9,13 +9,13 @@ Read the primary source (`raw/`) directly for a focused, structural deep-read. U
 
 ## When to dive (vs query / ingest)
 
-| Situation | Use |
-|---|---|
-| "What does [[concepts/foo]] say about X?" | `query` |
-| "Summarise this new repo into the wiki" | `ingest` |
+| Situation                                                                                | Use        |
+| ---------------------------------------------------------------------------------------- | ---------- |
+| "What does \[[concepts/foo]\] say about X?"                                              | `query`    |
+| "Summarise this new repo into the wiki"                                                  | `ingest`   |
 | "The wiki summary of `foo` is shallow — show me exactly how the auth flow works in code" | **`dive`** |
-| "This repo was updated yesterday; what changed in the retry logic?" | **`dive`** |
-| "I know the wiki won't cover this detail, just read `raw/repos/foo/pkg/x.go`" | **`dive`** |
+| "This repo was updated yesterday; what changed in the retry logic?"                      | **`dive`** |
+| "I know the wiki won't cover this detail, just read `raw/repos/foo/pkg/x.go`"            | **`dive`** |
 
 Anti-trigger: if the user has not signalled that the wiki is insufficient, prefer `query` first.
 

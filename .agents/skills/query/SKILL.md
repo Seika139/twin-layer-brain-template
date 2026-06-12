@@ -46,21 +46,21 @@ For **deep implementation-level reads of `raw/repos/<repo>/`** (trace a function
 
 Every non-trivial claim cites the wiki page it came from:
 
-- "According to [[concepts/llm-wiki-pattern]], the crux is persistence."
-- "Both [[entities/foam]] and [[entities/obsidian]] support wiki-links, but they differ in graph view behavior."
+- "According to \[[concepts/llm-wiki-pattern]\], the crux is persistence."
+- "Both \[[entities/foam]\] and \[[entities/obsidian]\] support wiki-links, but they differ in graph view behavior."
 
 The wiki page, in turn, cites `[[sources/...]]`.
 
 ### 4. Pick a response format that fits
 
-| Question shape | Format |
-|---|---|
-| "What is X?" | Prose with citations |
-| "How does X differ from Y?" | Comparison table |
-| "How does X relate to Y?" | Mermaid graph / sequence |
+| Question shape              | Format                   |
+| --------------------------- | ------------------------ |
+| "What is X?"                | Prose with citations     |
+| "How does X differ from Y?" | Comparison table         |
+| "How does X relate to Y?"   | Mermaid graph / sequence |
 | "When should I use X vs Y?" | Decision tree (bulleted) |
-| "Walk me through X" | Marp slide outline |
-| "Give me an analysis of X" | New markdown page |
+| "Walk me through X"         | Marp slide outline       |
+| "Give me an analysis of X"  | New markdown page        |
 
 Mermaid and Marp render inline in VS Code preview.
 

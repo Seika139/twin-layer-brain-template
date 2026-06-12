@@ -9,7 +9,7 @@
 | [instance-setup.md](instance-setup.md)         | template をコピーして新しい brain を作る時                 |
 | [environment.md](environment.md)               | `.env` と環境変数の優先順位・用途・既定挙動を確認する時    |
 | [knowledge-ingest.md](knowledge-ingest.md)     | ソースを取得し、wiki に取り込む時                          |
-| [chrome-extension.md](chrome-extension.md)     | Chrome から Web clip を保存する時                           |
+| [chrome-extension.md](chrome-extension.md)     | Chrome から Web clip を保存する時                          |
 | [search.md](search.md)                         | SQLite / LLM Wiki の検索の使い分けを確認する時             |
 | [http-api.md](http-api.md)                     | HTTP server / REST API の起動・認証・endpoint を確認する時 |
 | [server-management.md](server-management.md)   | macOS / Linux の HTTP server 常駐運用を確認する時          |

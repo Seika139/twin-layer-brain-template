@@ -4,13 +4,13 @@
 
 ## 置き場所
 
-| パス | 用途 | Git |
-|---|---|---|
-| `raw/notes/` | 自分のメモ、議事録、文字起こし | tracked |
-| `raw/articles/` | Web clip、PDF、論文、記事 | tracked |
-| `raw/assets/` | 画像、図版 | tracked |
-| `raw/repos/` | 外部 repo の clone | ignored（`repos.json` から再構築） |
-| `repos.json` | `raw/repos/` に置く repo のマニフェスト | tracked |
+| パス            | 用途                                    | Git                                |
+| --------------- | --------------------------------------- | ---------------------------------- |
+| `raw/notes/`    | 自分のメモ、議事録、文字起こし          | tracked                            |
+| `raw/articles/` | Web clip、PDF、論文、記事               | tracked                            |
+| `raw/assets/`   | 画像、図版                              | tracked                            |
+| `raw/repos/`    | 外部 repo の clone                      | ignored（`repos.json` から再構築） |
+| `repos.json`    | `raw/repos/` に置く repo のマニフェスト | tracked                            |
 
 `raw/notes/` は人間所有の不変ソースです。LLM は原則として編集しません。
 

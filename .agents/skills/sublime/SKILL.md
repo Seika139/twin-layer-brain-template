@@ -26,11 +26,11 @@ Pick exactly one target per run. Examples:
 
 Split the target's content into three buckets. It is normal for a single analysis to contain all three.
 
-| Bucket | Canonical home | Example |
-|---|---|---|
-| **Cross-cutting permanent claim** | new or updated `wiki/topics/<slug>.md` | "LLM Wiki compounds because synthesis is persisted, unlike RAG." |
-| **Source- or entity-specific permanent fact** | backflow into existing `wiki/sources/<slug>.md` or `wiki/entities/<slug>.md` | "Obsidian Web Clipper saves images when Attachment folder points at `raw/assets/`." |
-| **Time-bound / derivation artefact** | stays in the source analysis | "As of 2026-04-23 the wiki has 2 sources and 7 concepts, so qmd adoption is not yet warranted." |
+| Bucket                                        | Canonical home                                                               | Example                                                                                         |
+| --------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Cross-cutting permanent claim**             | new or updated `wiki/topics/<slug>.md`                                       | "LLM Wiki compounds because synthesis is persisted, unlike RAG."                                |
+| **Source- or entity-specific permanent fact** | backflow into existing `wiki/sources/<slug>.md` or `wiki/entities/<slug>.md` | "Obsidian Web Clipper saves images when Attachment folder points at `raw/assets/`."             |
+| **Time-bound / derivation artefact**          | stays in the source analysis                                                 | "As of 2026-04-23 the wiki has 2 sources and 7 concepts, so qmd adoption is not yet warranted." |
 
 ### 3. Backflow source-specific facts first
 
