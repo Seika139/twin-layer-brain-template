@@ -1,0 +1,24 @@
+# mdformat (markdown formatter) configuration.
+#
+# 役割分担: lint/style は rumdl + markdownlint-cli2、テーブルの桁揃え
+# (両者とも MD060 を全角幅の都合で無効化している) は mdformat-gfm が担う。
+# frontmatter と [[wiki-link]] は mdformat-frontmatter / gfm が保全する。
+
+# 長い行を折り返さない。
+wrap = "keep"
+
+# 番号付きリストを 1. 2. 3. の連番のまま保持する (既定の全 1. 化を抑止)。
+number = true
+
+# mdformat は .gitignore を見ないため、rumdl / markdownlint と同じ範囲を除外する。
+# raw/repos・raw/articles・raw/notes は外部由来 / user-owned で整形対象外。
+exclude = [
+  "raw/repos/**",
+  "raw/articles/**",
+  "raw/notes/**",
+  "node_modules/**",
+  "tmp/**",
+  ".serena/**",
+  ".venv/**",
+  "**/.venv/**",
+]

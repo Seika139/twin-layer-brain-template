@@ -23,6 +23,7 @@ for arg in "$@"; do
 done
 
 print_blue "Formatting Markdown files"$'\n'
+uv run mdformat .
 rumdl check --fix .
 markdownlint-cli2 --fix
 
