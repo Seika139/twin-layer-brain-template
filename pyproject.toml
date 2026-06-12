@@ -18,7 +18,14 @@ dependencies = [
 kc = "compiler.cli:main"
 
 [dependency-groups]
-dev = ["ruff", "mypy", "pytest"]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "mdformat>=1.0.0",
+    "mdformat-gfm>=1.0.0",
+    "mdformat-frontmatter>=2.1.2",
+]
 
 [build-system]
 requires = ["hatchling"]
