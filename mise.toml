@@ -2,7 +2,7 @@
 # Run `mise tasks` to list tasks, `mise run <name>` to execute.
 
 [settings]
-install_before = "7d"
+minimum_release_age = "7d"
 
 [tools]
 python = "3.14"
